@@ -126,12 +126,12 @@
 <!-- TAB 3: TRANG DÁN DỮ LIỆU -->
 <div id="upload-tab" class="tab-content">
   <div class="card" style="text-align: left;">
-    <h3 style="color: #1C4A34; margin-top: 0;">📋 TRANG NHẬP DỮ LIỆU</h3>
-    <p style="font-size: 13px; color: #555;">Dán toàn bộ dữ liệu từ Cột A đến Cột K từ Google Sheets vào đây:</p>
+    <h3 style="color: #1C4A34; margin-top: 0;">📋 TRANG NHẬP DỮ LIỆU DÙNG CHUNG CẢ HỆ THỐNG</h3>
+    <p style="font-size: 13px; color: #555;">Dán toàn bộ dữ liệu từ Cột A đến Cột K từ Google Sheets vào đây (Dữ liệu sẽ tự đồng bộ sang điện thoại):</p>
     
     <textarea id="pasteDataInput" placeholder="Dán chữ copy từ Google Sheet vào đây..."></textarea>
     <br>
-    <button class="btn-main" onclick="processPastedData()">NẠP DỮ LIỆU VÀO TOOL</button>
+    <button class="btn-main" onclick="processPastedData()">NẠP DỮ LIỆU VÀO ĐÁM MÂY</button>
     <button class="btn-main btn-danger" onclick="resetAllData()">XÓA TOÀN BỘ DATA</button>
 
     <div id="uploadStatus" style="margin-top: 15px; font-weight: bold;"></div>
@@ -139,31 +139,76 @@
 </div>
 
 <script>
-  let cachedData = JSON.parse(localStorage.getItem('football_data') || '[]');
-  let checkedList = new Set(JSON.parse(localStorage.getItem('football_checkedList') || '[]'));
+  // DÁN MÃ BIN ID VÀ MASTER KEY VÀO 2 DÒNG DƯỚI ĐÂY:
+  const BIN_ID = "6aab9793ffd5d1605310ef9f";
+  const MASTER_KEY = "$2a$10$N9qoHXcILdL.c3mHYbwm8.6cDeAa2R1hou30hmNkoJo2dfXE3aM5K";
+
+  let cachedData = [];
+  let checkedList = new Set();
+  let lastCheckedCount = 0;
 
   window.onload = function() {
     new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 160, height: 160 });
     
-    // TỰ ĐỘNG CHECK-IN KHI TRUY CẬP TỪ MÃ QR CÁ NHÂN (Tham số ?q=...)
-    const urlParams = new URLSearchParams(window.location.search);
-    const queryParam = urlParams.get('q') || urlParams.get('query');
-    if (queryParam) {
-      document.getElementById('userInput').value = queryParam;
-      submitCheckIn();
-    }
-
-    // Thiết lập Polling tự động làm mới Dashboard nếu đang mở Tab 2
-    setInterval(() => {
-      if (document.getElementById('dashboard-tab').classList.contains('active')) {
-        loadDashboard();
+    // Tải dữ liệu từ Đám mây về khi mở trang
+    syncCloudData().then(() => {
+      // Tự động Check-in nếu truy cập qua URL cá nhân
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryParam = urlParams.get('q') || urlParams.get('query');
+      if (queryParam) {
+        document.getElementById('userInput').value = queryParam;
+        submitCheckIn();
       }
-    }, 5000);
+    });
+
+    // Lắng nghe dữ liệu mới từ máy tính/điện thoại khác mỗi 3 giây
+    setInterval(() => {
+      syncCloudData(true);
+    }, 3000);
   };
 
   function cleanStr(str) {
     if (!str) return "";
     return str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, " ").trim();
+  }
+
+  // Hàm đồng bộ dữ liệu từ đám mây JSONBin
+  async function syncCloudData(isBackground = false) {
+    if (!BIN_ID || BIN_ID.includes("THAY_BIN")) return;
+    try {
+      let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
+        headers: { "X-Master-Key": MASTER_KEY }
+      });
+      let json = await res.json();
+      if (json.record) {
+        cachedData = json.record.data || [];
+        checkedList = new Set(json.record.checked || []);
+
+        // Màn hình tự động hiển thị khi có người mới check-in
+        if (isBackground && checkedList.size > lastCheckedCount) {
+          lastCheckedCount = checkedList.size;
+          if (document.getElementById('dashboard-tab').classList.contains('active')) {
+            loadDashboard();
+          }
+        }
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  // Đẩy dữ liệu mới lên đám mây
+  async function pushCloudData() {
+    if (!BIN_ID || BIN_ID.includes("THAY_BIN")) return;
+    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": MASTER_KEY
+      },
+      body: JSON.stringify({
+        data: cachedData,
+        checked: [...checkedList]
+      })
+    });
   }
 
   function processPastedData() {
@@ -207,31 +252,28 @@
       }
     }
 
-    if (parsedData.length === 0) {
-      alert("Không tìm thấy dữ liệu hợp lệ!");
-      return;
-    }
+    if (parsedData.length === 0) return alert("Không tìm thấy dữ liệu hợp lệ!");
 
     cachedData = parsedData;
-    localStorage.setItem('football_data', JSON.stringify(cachedData));
-
-    document.getElementById('uploadStatus').style.color = 'green';
-    document.getElementById('uploadStatus').innerText = `✓ Đã nạp thành công ${cachedData.length} người (Cầu thủ & BTC)!`;
-    document.getElementById('pasteDataInput').value = '';
+    pushCloudData().then(() => {
+      document.getElementById('uploadStatus').style.color = 'green';
+      document.getElementById('uploadStatus').innerText = `✓ Đã nạp & đồng bộ thành công ${cachedData.length} người lên Đám Mây!`;
+      document.getElementById('pasteDataInput').value = '';
+    });
   }
 
   function resetAllData() {
-    if (confirm("Xóa toàn bộ dữ liệu và danh sách check-in?")) {
-      localStorage.removeItem('football_data');
-      localStorage.removeItem('football_checkedList');
+    if (confirm("Xóa toàn bộ dữ liệu trên đám mây?")) {
       cachedData = [];
       checkedList.clear();
-      document.getElementById('uploadStatus').style.color = 'red';
-      document.getElementById('uploadStatus').innerText = "Đã xóa sạch dữ liệu!";
+      pushCloudData().then(() => {
+        document.getElementById('uploadStatus').style.color = 'red';
+        document.getElementById('uploadStatus').innerText = "Đã xóa sạch dữ liệu hệ thống!";
+      });
     }
   }
 
-  function submitCheckIn() {
+  async function submitCheckIn() {
     const val = document.getElementById('userInput').value.trim();
     if (!val) return alert("Vui lòng nhập MSNV, SĐT hoặc Họ tên!");
 
@@ -241,12 +283,11 @@
 
     if (cachedData.length === 0) {
       resBox.style.backgroundColor = '#ffebee';
-      resBox.innerHTML = '<b style="color:red;">❌ Chưa có dữ liệu! Vui lòng bấm sang tab "⚙️ NHẬP DỮ LIỆU" để dán danh sách trước.</b>';
+      resBox.innerHTML = '<b style="color:red;">❌ Chưa có dữ liệu! Vui lòng nạp dữ liệu ở Tab "⚙️ NHẬP DỮ LIỆU" trên Máy tính trước.</b>';
       return;
     }
 
     const cleanQuery = cleanStr(val);
-    
     let match = cachedData.find(item => !item.isBTC && (cleanStr(item.hoTen) === cleanQuery || cleanStr(item.msnv) === cleanQuery || cleanStr(item.sdt) === cleanQuery));
     if (!match) {
       match = cachedData.find(item => item.isBTC && (cleanStr(item.hoTen) === cleanQuery || cleanStr(item.msnv) === cleanQuery || cleanStr(item.sdt) === cleanQuery));
@@ -259,7 +300,7 @@
     }
 
     checkedList.add(match.hoTen);
-    localStorage.setItem('football_checkedList', JSON.stringify([...checkedList]));
+    await pushCloudData(); // Đồng bộ ngay lên màn hình máy tính
 
     if (match.isBTC) {
       resBox.className = 'result-box btc';
@@ -329,7 +370,7 @@
     ).join('');
 
     document.querySelector('#notCheckedTable tbody').innerHTML = notCheckedIn.map(i => 
-      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
+      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
     ).join('');
 
     document.querySelector('#checkedTable tbody').innerHTML = checkedIn.map(i => 
