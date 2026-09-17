@@ -41,7 +41,7 @@
 </head>
 <body>
 
-<div class="nav-tabs">
+<div class="nav-tabs" id="navHeader">
   <button id="tab1-btn" class="active" onclick="switchTab('checkin-tab')">QUẦY CHECK-IN SÂN BÓNG</button>
   <button id="tab2-btn" onclick="switchTab('dashboard-tab'); loadDashboard();">DANH SÁCH & THỐNG KÊ CHI TIẾT</button>
   <button id="tab3-btn" onclick="switchTab('upload-tab')">⚙️ NHẬP DỮ LIỆU</button>
@@ -50,21 +50,27 @@
 <!-- TAB 1: CỔNG CHECK-IN -->
 <div id="checkin-tab" class="tab-content active">
   <div class="card">
-    <h2 style="color: #1C4A34; margin: 0;">CHECK-IN GIẢI BÓNG ĐÁ</h2>
+    <h2 style="color: #1C4A34; margin: 0 0 10px 0;">CHECK-IN GIẢI BÓNG ĐÁ</h2>
     
-    <div class="qr-container">
-      <h3 style="margin: 0 0 5px 0; color: #333;">QUÉT MÃ QR ĐỂ CHECK-IN</h3>
-      <div id="qrcode"></div>
-      <p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Quét mã bằng Camera / Zalo điện thoại</p>
+    <!-- KHUNG QR LỚN -->
+    <div id="mainQrBox">
+      <div class="qr-container">
+        <h3 style="margin: 0 0 5px 0; color: #333;">QUÉT MÃ QR ĐỂ CHECK-IN</h3>
+        <div id="qrcode"></div>
+        <p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Quét mã bằng Camera / Zalo điện thoại</p>
+      </div>
+      <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
     </div>
 
-    <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
+    <!-- KHUNG NHẬP TAY -->
+    <div id="manualInputBox">
+      <p style="margin: 5px 0; font-weight: bold; color: #555;">Hoặc Nhập SĐT / MSNV / Họ Tên trực tiếp:</p>
+      <input type="text" id="userInput" placeholder="Nhập SĐT, MSNV hoặc Họ tên...">
+      <br>
+      <button class="btn-main" onclick="submitCheckIn()">XÁC NHẬN CHECK-IN</button>
+    </div>
 
-    <p style="margin: 5px 0; font-weight: bold; color: #555;">Hoặc Nhập SĐT / MSNV / Họ Tên trực tiếp:</p>
-    <input type="text" id="userInput" placeholder="Nhập SĐT, MSNV hoặc Họ tên...">
-    <br>
-    <button class="btn-main" onclick="submitCheckIn()">XÁC NHẬN CHECK-IN</button>
-
+    <!-- KHUNG HIỂN THỊ KẾT QUẢ -->
     <div id="resultBox" class="result-box"></div>
   </div>
 </div>
@@ -126,12 +132,12 @@
 <!-- TAB 3: TRANG DÁN DỮ LIỆU -->
 <div id="upload-tab" class="tab-content">
   <div class="card" style="text-align: left;">
-    <h3 style="color: #1C4A34; margin-top: 0;">📋 TRANG NHẬP DỮ LIỆU DÙNG CHUNG CẢ HỆ THỐNG</h3>
-    <p style="font-size: 13px; color: #555;">Dán toàn bộ dữ liệu từ Cột A đến Cột K từ Google Sheets vào đây (Dữ liệu sẽ tự đồng bộ sang điện thoại):</p>
+    <h3 style="color: #1C4A34; margin-top: 0;">📋 TRANG NHẬP DỮ LIỆU CẦU THỦ & BTC</h3>
+    <p style="font-size: 13px; color: #555;">Hướng dẫn: Copy toàn bộ từ Cột A đến Cột K trên Google Sheet và dán vào khung bên dưới:</p>
     
-    <textarea id="pasteDataInput" placeholder="Dán chữ copy từ Google Sheet vào đây..."></textarea>
+    <textarea id="pasteDataInput" placeholder="Dán dữ liệu Google Sheets vào đây..."></textarea>
     <br>
-    <button class="btn-main" onclick="processPastedData()">NẠP DỮ LIỆU VÀO ĐÁM MÂY</button>
+    <button class="btn-main" onclick="processPastedData()">NẠP DỮ LIỆU VÀO TOOL</button>
     <button class="btn-main btn-danger" onclick="resetAllData()">XÓA TOÀN BỘ DATA</button>
 
     <div id="uploadStatus" style="margin-top: 15px; font-weight: bold;"></div>
@@ -139,32 +145,22 @@
 </div>
 
 <script>
-  // DÁN MÃ BIN ID VÀ MASTER KEY VÀO 2 DÒNG DƯỚI ĐÂY:
-  const BIN_ID = "6aab9793ffd5d1605310ef9f";
-  const MASTER_KEY = "$2a$10$N9qoHXcILdL.c3mHYbwm8.6cDeAa2R1hou30hmNkoJo2dfXE3aM5K";
-
-  let cachedData = [];
-  let checkedList = new Set();
-  let lastCheckedCount = 0;
+  let cachedData = JSON.parse(localStorage.getItem('football_data') || '[]');
+  let checkedList = new Set(JSON.parse(localStorage.getItem('football_checkedList') || '[]'));
 
   window.onload = function() {
     new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 160, height: 160 });
     
-    // Tải dữ liệu từ Đám mây về khi mở trang
-    syncCloudData().then(() => {
-      // Tự động Check-in nếu truy cập qua URL cá nhân
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryParam = urlParams.get('q') || urlParams.get('query');
-      if (queryParam) {
-        document.getElementById('userInput').value = queryParam;
-        submitCheckIn();
-      }
-    });
-
-    // Lắng nghe dữ liệu mới từ máy tính/điện thoại khác mỗi 3 giây
-    setInterval(() => {
-      syncCloudData(true);
-    }, 3000);
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryParam = urlParams.get('q') || urlParams.get('query');
+    if (queryParam) {
+      document.getElementById('mainQrBox').style.display = 'none';
+      document.getElementById('manualInputBox').style.display = 'none';
+      document.getElementById('navHeader').style.display = 'none';
+      
+      document.getElementById('userInput').value = queryParam;
+      submitCheckIn();
+    }
   };
 
   function cleanStr(str) {
@@ -172,48 +168,9 @@
     return str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, " ").trim();
   }
 
-  // Hàm đồng bộ dữ liệu từ đám mây JSONBin
-  async function syncCloudData(isBackground = false) {
-    if (!BIN_ID || BIN_ID.includes("THAY_BIN")) return;
-    try {
-      let res = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}/latest`, {
-        headers: { "X-Master-Key": MASTER_KEY }
-      });
-      let json = await res.json();
-      if (json.record) {
-        cachedData = json.record.data || [];
-        checkedList = new Set(json.record.checked || []);
-
-        // Màn hình tự động hiển thị khi có người mới check-in
-        if (isBackground && checkedList.size > lastCheckedCount) {
-          lastCheckedCount = checkedList.size;
-          if (document.getElementById('dashboard-tab').classList.contains('active')) {
-            loadDashboard();
-          }
-        }
-      }
-    } catch (e) { console.error(e); }
-  }
-
-  // Đẩy dữ liệu mới lên đám mây
-  async function pushCloudData() {
-    if (!BIN_ID || BIN_ID.includes("THAY_BIN")) return;
-    await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Master-Key": MASTER_KEY
-      },
-      body: JSON.stringify({
-        data: cachedData,
-        checked: [...checkedList]
-      })
-    });
-  }
-
   function processPastedData() {
     const rawText = document.getElementById('pasteDataInput').value.trim();
-    if (!rawText) return alert("Vui lòng dán chữ copy từ Google Sheet vào ô!");
+    if (!rawText) return alert("Vui lòng dán dữ liệu copy từ Google Sheet vào ô!");
 
     const lines = rawText.split('\n');
     let parsedData = [];
@@ -225,25 +182,35 @@
       if (cols.length < 1) continue;
       if (cleanStr(cols[0]) === 'ho va ten' || cleanStr(cols[0]) === 'ho ten') continue;
 
+      // Quét Cầu Thủ (Cột A - G)
       if (cols[0]) {
+        let teamName = cols[5] ? cols[5].trim() : "";
+        let zoneName = cols[3] ? cols[3].trim() : "Chưa có Zone";
+        
+        // Nếu không có tên đội thi đấu (Cột F) thì gán rõ theo Zone
+        if (!teamName) {
+          teamName = "Chưa xếp đội (" + zoneName + ")";
+        }
+
         parsedData.push({
           hoTen: cols[0] || "",
           msnv: cols[1] || "",
           sdt: cols[2] || "",
-          zone: cols[3] || "",
-          soAo: cols[4] || "",
-          tenDoi: cols[5] || "",
-          viTri: cols[6] || "",
+          zone: zoneName,
+          soAo: cols[4] || "-",
+          tenDoi: teamName,
+          viTri: cols[6] || "-",
           isBTC: false
         });
       }
 
+      // Quét BTC (Cột I - K) -> Chỉ số mảng: I=8, J=9, K=10
       if (cols[8]) {
         parsedData.push({
           hoTen: cols[8] || "",
           msnv: "-",
           sdt: "-",
-          zone: "BTC",
+          zone: "Ban Tổ Chức",
           soAo: "-",
           tenDoi: "Ban Tổ Chức",
           viTri: cols[10] || "BTC",
@@ -255,25 +222,25 @@
     if (parsedData.length === 0) return alert("Không tìm thấy dữ liệu hợp lệ!");
 
     cachedData = parsedData;
-    pushCloudData().then(() => {
-      document.getElementById('uploadStatus').style.color = 'green';
-      document.getElementById('uploadStatus').innerText = `✓ Đã nạp & đồng bộ thành công ${cachedData.length} người lên Đám Mây!`;
-      document.getElementById('pasteDataInput').value = '';
-    });
+    localStorage.setItem('football_data', JSON.stringify(cachedData));
+
+    document.getElementById('uploadStatus').style.color = 'green';
+    document.getElementById('uploadStatus').innerText = `✓ Đã nạp thành công ${cachedData.length} nhân sự vào hệ thống!`;
+    document.getElementById('pasteDataInput').value = '';
   }
 
   function resetAllData() {
-    if (confirm("Xóa toàn bộ dữ liệu trên đám mây?")) {
+    if (confirm("Xóa toàn bộ dữ liệu và danh sách check-in?")) {
+      localStorage.removeItem('football_data');
+      localStorage.removeItem('football_checkedList');
       cachedData = [];
       checkedList.clear();
-      pushCloudData().then(() => {
-        document.getElementById('uploadStatus').style.color = 'red';
-        document.getElementById('uploadStatus').innerText = "Đã xóa sạch dữ liệu hệ thống!";
-      });
+      document.getElementById('uploadStatus').style.color = 'red';
+      document.getElementById('uploadStatus').innerText = "Đã xóa sạch dữ liệu!";
     }
   }
 
-  async function submitCheckIn() {
+  function submitCheckIn() {
     const val = document.getElementById('userInput').value.trim();
     if (!val) return alert("Vui lòng nhập MSNV, SĐT hoặc Họ tên!");
 
@@ -283,11 +250,13 @@
 
     if (cachedData.length === 0) {
       resBox.style.backgroundColor = '#ffebee';
-      resBox.innerHTML = '<b style="color:red;">❌ Chưa có dữ liệu! Vui lòng nạp dữ liệu ở Tab "⚙️ NHẬP DỮ LIỆU" trên Máy tính trước.</b>';
+      resBox.innerHTML = '<b style="color:red;">❌ Chưa có dữ liệu! Vui lòng bấm sang Tab "⚙️ NHẬP DỮ LIỆU" dán danh sách trước.</b>';
       return;
     }
 
     const cleanQuery = cleanStr(val);
+    
+    // Ưu tiên tìm Cầu thủ trước
     let match = cachedData.find(item => !item.isBTC && (cleanStr(item.hoTen) === cleanQuery || cleanStr(item.msnv) === cleanQuery || cleanStr(item.sdt) === cleanQuery));
     if (!match) {
       match = cachedData.find(item => item.isBTC && (cleanStr(item.hoTen) === cleanQuery || cleanStr(item.msnv) === cleanQuery || cleanStr(item.sdt) === cleanQuery));
@@ -300,14 +269,19 @@
     }
 
     checkedList.add(match.hoTen);
-    await pushCloudData(); // Đồng bộ ngay lên màn hình máy tính
+    localStorage.setItem('football_checkedList', JSON.stringify([...checkedList]));
 
     if (match.isBTC) {
       resBox.className = 'result-box btc';
-      resBox.innerHTML = '<h3 style="color:#d97706; margin:0 0 5px 0;">BAN TỔ CHỨC / TRỌNG TÀI</h3><p><b>Họ tên:</b> ' + match.hoTen + ' | <b>Chức danh:</b> ' + match.viTri + '</p><p style="color:green; font-weight:bold; margin:0;">✓ CHECK-IN THÀNH CÔNG!</p>';
+      resBox.innerHTML = '<h2 style="color:#d97706; margin:0 0 8px 0; text-align:center;">✓ CHECK-IN THÀNH CÔNG</h2>' +
+                         '<p style="font-size:16px; margin:5px 0;"><b>Họ tên:</b> ' + match.hoTen + '</p>' +
+                         '<p style="font-size:16px; margin:5px 0;"><b>Chức danh:</b> ' + match.viTri + ' (Ban Tổ Chức)</p>';
     } else {
       resBox.className = 'result-box player';
-      resBox.innerHTML = '<h3 style="color:#15803d; margin:0 0 5px 0;">CẦU THỦ THI ĐẤU</h3><p><b>Họ tên:</b> ' + match.hoTen + ' | <b>Đội:</b> ' + (match.tenDoi || 'Chưa xếp') + '</p><p><b>Số áo:</b> ' + (match.soAo || 'N/A') + ' | <b>SĐT:</b> ' + match.sdt + ' | <b>Zone:</b> ' + match.zone + '</p><p style="color:green; font-weight:bold; margin:0;">✓ CHECK-IN THÀNH CÔNG!</p>';
+      resBox.innerHTML = '<h2 style="color:#15803d; margin:0 0 8px 0; text-align:center;">✓ CHECK-IN THÀNH CÔNG</h2>' +
+                         '<p style="font-size:16px; margin:5px 0;"><b>Họ tên:</b> ' + match.hoTen + '</p>' +
+                         '<p style="font-size:16px; margin:5px 0;"><b>Đội bóng:</b> ' + match.tenDoi + '</p>' +
+                         '<p style="font-size:16px; margin:5px 0;"><b>Số áo:</b> ' + match.soAo + ' | <b>Zone:</b> ' + match.zone + '</p>';
     }
     document.getElementById('userInput').value = '';
   }
@@ -347,9 +321,10 @@
     document.getElementById('countChecked').innerText = checkedIn.length;
     document.getElementById('countNotChecked').innerText = notCheckedIn.length;
 
+    // 1. Thống kê theo Đội
     const teams = {};
     uniqueList.forEach(i => {
-      let team = i.tenDoi || 'Khác / BTC';
+      let team = i.tenDoi || 'Chưa xếp đội';
       if (!teams[team]) teams[team] = { checked: 0, total: 0 };
       teams[team].total++;
       if (checkedList.has(i.hoTen)) teams[team].checked++;
@@ -358,9 +333,10 @@
       '<tr><td><b>' + t + '</b></td><td>' + teams[t].checked + '</td><td>' + teams[t].total + '</td></tr>'
     ).join('');
 
+    // 2. Thống kê theo Zone
     const zones = {};
     uniqueList.forEach(i => {
-      let z = i.zone || 'BTC / Chưa có Zone';
+      let z = i.zone || 'Chưa có Zone';
       if (!zones[z]) zones[z] = { checked: 0, total: 0 };
       zones[z].total++;
       if (checkedList.has(i.hoTen)) zones[z].checked++;
@@ -369,12 +345,13 @@
       '<tr><td><b>' + z + '</b></td><td>' + zones[z].checked + '</td><td>' + zones[z].total + '</td></tr>'
     ).join('');
 
+    // 3. Render Chi tiết
     document.querySelector('#notCheckedTable tbody').innerHTML = notCheckedIn.map(i => 
       '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
     ).join('');
 
     document.querySelector('#checkedTable tbody').innerHTML = checkedIn.map(i => 
-      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
+      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
     ).join('');
   }
 </script>
