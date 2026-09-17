@@ -1,78 +1,210 @@
-function doGet(e) {
-  var action = e.parameter.action;
-  // Trỏ chính xác vào sheet name: checkin
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("checkin");
-  var data = sheet.getDataRange().getValues();
-  
-  // 1. TẢI DỮ LIỆU BÁO CÁO CHO TAB 2 (DASHBOARD)
-  if (action === "getDashboard") {
-    var checkedIn = [];
-    var notCheckedIn = [];
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trạm Check-in Giải Bóng Đá</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
+    .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .nav-tabs button { padding: 10px 20px; font-weight: bold; border: none; background: #e4e6eb; border-radius: 8px; cursor: pointer; font-size: 15px; }
+    .nav-tabs button.active { background: #1C4A34; color: white; }
     
-    for (var i = 1; i < data.length; i++) {
-      var row = data[i];
-      if (!row[0]) continue; // Bỏ qua dòng trống tên
+    .tab-content { display: none; max-width: 1050px; margin: auto; }
+    .tab-content.active { display: block; }
+    
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center; margin-bottom: 20px; }
+    .qr-container { background: #f8f9fa; border: 2px dashed #1C4A34; border-radius: 12px; padding: 15px; display: inline-block; margin: 10px 0; }
+    #qrcode img { margin: auto; border: 4px solid white; border-radius: 8px; }
+    
+    input { width: 80%; max-width: 350px; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; }
+    .btn-main { width: 85%; max-width: 370px; padding: 12px; background: #1C4A34; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    
+    .result-box { margin-top: 15px; padding: 15px; border-radius: 8px; text-align: left; display: none; }
+    .player { background: #e8f5e9; border: 1px solid #4caf50; }
+    .btc { background: #fff8e1; border: 1px solid #ffb300; }
+    
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
 
-      var item = {
-        hoTen: row[0],   // Cột A
-        msnv: row[1],    // Cột B
-        sdt: row[2],     // Cột C
-        zone: row[3],    // Cột D
-        soAo: row[4],    // Cột E
-        tenDoi: row[5],  // Cột F
-        viTri: row[6],   // Cột G
-        status: row[7]   // Cột H
-      };
-      
-      if (item.status === "Đã check-in") {
-        checkedIn.push(item);
-      } else {
-        notCheckedIn.push(item);
-      }
-    }
-    return responseJSON({ checkedIn: checkedIn, notCheckedIn: notCheckedIn });
-  }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 13px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #1C4A34; color: white; }
+    .stat-box { display: flex; gap: 15px; margin-bottom: 15px; }
+    .stat-card { flex: 1; background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+  </style>
+</head>
+<body>
 
-  // 2. XỬ LÝ TRA CỨU & CHECK-IN
-  var query = e.parameter.query;
-  if (!query) return responseJSON({ success: false, message: "Thiếu thông tin tra cứu!" });
-  
-  query = query.toString().trim().toLowerCase();
+<div class="nav-tabs">
+  <button id="tab1-btn" class="active" onclick="switchTab('checkin-tab')">QUẦY CHECK-IN SÂN BÓNG</button>
+  <button id="tab2-btn" onclick="switchTab('dashboard-tab'); loadDashboard();">DANH SÁCH & THỐNG KÊ CHI TIẾT</button>
+</div>
 
-  for (var i = 1; i < data.length; i++) {
-    var row = data[i];
-    if (!row[0]) continue;
+<!-- TAB 1: CỔNG CHECK-IN -->
+<div id="checkin-tab" class="tab-content active">
+  <div class="card">
+    <h2 style="color: #1C4A34; margin: 0;">CHECK-IN GIẢI BÓNG ĐÁ</h2>
+    
+    <div class="qr-container">
+      <h3 style="margin: 0 0 5px 0; color: #333;">QUÉT MÃ QR ĐỂ CHECK-IN</h3>
+      <div id="qrcode"></div>
+      <p style="font-size: 12px; color: #666; margin: 5px 0 0 0;">Mở Camera / Zalo quét mã bằng điện thoại</p>
+    </div>
 
-    var msnv = row[1] ? row[1].toString().trim().toLowerCase() : "";
-    var sdt = row[2] ? row[2].toString().trim().toLowerCase() : "";
+    <hr style="margin: 10px 0; border: 0; border-top: 1px solid #eee;">
 
-    // Tìm kiếm khớp với MSNV hoặc SĐT
-    if ((msnv && query === msnv) || (sdt && query === sdt)) {
-      // Ghi chữ "Đã check-in" vào Cột H (Cột số 8)
-      sheet.getRange(i + 1, 8).setValue("Đã check-in");
-      
-      var isBTC = (row[6] === "BTC" || row[3] === "BTC"); 
-      
-      return responseJSON({
-        success: true,
-        data: {
-          hoTen: row[0],
-          msnv: row[1],
-          sdt: row[2],
-          zone: row[3],
-          soAo: row[4],
-          tenDoi: row[5],
-          viTri: row[6],
-          isBTC: isBTC
+    <p style="margin: 5px 0; font-weight: bold; color: #555;">Hoặc Nhập SĐT / MSNV / Họ Tên trực tiếp:</p>
+    <input type="text" id="userInput" placeholder="Nhập SĐT, MSNV hoặc Họ tên...">
+    <br>
+    <button class="btn-main" onclick="submitCheckIn()">XÁC NHẬN CHECK-IN</button>
+
+    <div id="resultBox" class="result-box"></div>
+  </div>
+</div>
+
+<!-- TAB 2: THỐNG KÊ & BÁO CÁO CHI TIẾT -->
+<div id="dashboard-tab" class="tab-content">
+  <div class="stat-box">
+    <div class="stat-card"><h2 id="countChecked" style="color: green; margin:0;">0</h2><p style="margin:5px 0 0 0;">Đã Check-in</p></div>
+    <div class="stat-card"><h2 id="countNotChecked" style="color: red; margin:0;">0</h2><p style="margin:5px 0 0 0;">Chưa Check-in</p></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="text-align: left;">
+      <h3 style="color: #1C4A34; margin: 0 0 10px 0;">📊 Tổng Hợp Theo Đội Bóng</h3>
+      <div style="overflow-x:auto;">
+        <table id="teamStatTable">
+          <thead><tr><th>Tên Đội</th><th>Đã Check-in</th><th>Tổng Số</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="text-align: left;">
+      <h3 style="color: #1C4A34; margin: 0 0 10px 0;">🌐 Tổng Hợp Theo Zone</h3>
+      <div style="overflow-x:auto;">
+        <table id="zoneStatTable">
+          <thead><tr><th>Zone</th><th>Đã Check-in</th><th>Tổng Số</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="text-align: left;">
+    <h3 style="color: #c62828; margin-top:0;">Danh Sách CHƯA Check-in (Chi Tiết)</h3>
+    <div style="overflow-x:auto;">
+      <table id="notCheckedTable">
+        <thead>
+          <tr><th>Họ Tên</th><th>MSNV</th><th>SĐT Liên Hệ</th><th>Đội Bóng</th><th>Zone</th><th>Số Áo</th><th>Vị Trí</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="text-align: left;">
+    <h3 style="color: #2e7d32; margin-top:0;">Danh Sách ĐÃ Check-in (Chi Tiết)</h3>
+    <div style="overflow-x:auto;">
+      <table id="checkedTable">
+        <thead>
+          <tr><th>Họ Tên</th><th>MSNV</th><th>SĐT Liên Hệ</th><th>Đội Bóng</th><th>Zone</th><th>Số Áo</th><th>Vị Trí</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SCRIPT_URL = "DÁN_WEB_APP_URL_TỪ_GOOGLE_APPS_SCRIPT_VÀO_ĐÂY";
+
+  window.onload = function() {
+    new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 160, height: 160 });
+  };
+
+  function submitCheckIn() {
+    const val = document.getElementById('userInput').value.trim();
+    if (!val) return alert("Vui lòng nhập MSNV, SĐT hoặc Họ tên!");
+
+    const resBox = document.getElementById('resultBox');
+    resBox.style.display = 'block';
+    resBox.className = 'result-box';
+    resBox.innerHTML = 'Đang tra cứu dữ liệu...';
+
+    fetch(`${SCRIPT_URL}?query=${encodeURIComponent(val)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          resBox.style.backgroundColor = '#ffebee';
+          resBox.innerHTML = `<b style="color:red;">❌ ${data.message}</b>`;
+          return;
         }
+        const d = data.data;
+        if (d.isBTC) {
+          resBox.className = 'result-box btc';
+          resBox.innerHTML = `<h3 style="color:#d97706; margin:0 0 5px 0;">BAN TỔ CHỨC / TRỌNG TÀI</h3><p><b>Họ tên:</b> ${d.hoTen} | <b>Chức danh:</b> ${d.viTri}</p><p style="color:green; font-weight:bold; margin:0;">✓ CHECK-IN THÀNH CÔNG!</p>`;
+        } else {
+          resBox.className = 'result-box player';
+          resBox.innerHTML = `<h3 style="color:#15803d; margin:0 0 5px 0;">CẦU THỦ THI ĐẤU</h3><p><b>Họ tên:</b> ${d.hoTen} | <b>Đội:</b> ${d.tenDoi || 'Chưa xếp'}</p><p><b>Số áo:</b> ${d.soAo || 'N/A'} | <b>SĐT:</b> ${d.sdt} | <b>Zone:</b> ${d.zone}</p><p style="color:green; font-weight:bold; margin:0;">✓ CHECK-IN THÀNH CÔNG!</p>`;
+        }
+        document.getElementById('userInput').value = '';
       });
-    }
   }
 
-  return responseJSON({ success: false, message: "Không tìm thấy MSNV hoặc SĐT trong danh sách!" });
-}
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (tabId === 'checkin-tab') document.getElementById('tab1-btn').classList.add('active');
+    else document.getElementById('tab2-btn').classList.add('active');
+  }
 
-function responseJSON(data) {
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+  function loadDashboard() {
+    fetch(`${SCRIPT_URL}?action=getDashboard`)
+      .then(res => res.json())
+      .then(data => {
+        const allData = [...data.checkedIn, ...data.notCheckedIn];
+        document.getElementById('countChecked').innerText = data.checkedIn.length;
+        document.getElementById('countNotChecked').innerText = data.notCheckedIn.length;
+
+        // 1. Thống kê theo Đội
+        const teams = {};
+        allData.forEach(i => {
+          let team = i.tenDoi || 'Khác / BTC';
+          if (!teams[team]) teams[team] = { checked: 0, total: 0 };
+          teams[team].total++;
+          if (i.status === 'Đã check-in') teams[team].checked++;
+        });
+        document.querySelector('#teamStatTable tbody').innerHTML = Object.keys(teams).map(t => 
+          `<tr><td><b>${t}</b></td><td>${teams[t].checked}</td><td>${teams[t].total}</td></tr>`
+        ).join('');
+
+        // 2. Thống kê theo Zone
+        const zones = {};
+        allData.forEach(i => {
+          let z = i.zone || 'BTC / Chưa có Zone';
+          if (!zones[z]) zones[z] = { checked: 0, total: 0 };
+          zones[z].total++;
+          if (i.status === 'Đã check-in') zones[z].checked++;
+        });
+        document.querySelector('#zoneStatTable tbody').innerHTML = Object.keys(zones).map(z => 
+          `<tr><td><b>${z}</b></td><td>${zones[z].checked}</td><td>${zones[z].total}</td></tr>`
+        ).join('');
+
+        // 3. Render Chi Tiết Chưa Check-in
+        document.querySelector('#notCheckedTable tbody').innerHTML = data.notCheckedIn.map(i => 
+          `<tr><td>${i.hoTen}</td><td>${i.msnv || '-'}</td><td>${i.sdt || '-'}</td><td>${i.tenDoi || '-'}</td><td>${i.zone || '-'}</td><td>${i.soAo || '-'}</td><td>${i.viTri || '-'}</td></tr>`
+        ).join('');
+
+        // 4. Render Chi Tiết Đã Check-in
+        document.querySelector('#checkedTable tbody').innerHTML = data.checkedIn.map(i => 
+          `<tr><td>${i.hoTen}</td><td>${i.msnv || '-'}</td><td>${i.sdt || '-'}</td><td>${i.tenDoi || '-'}</td><td>${i.zone || '-'}</td><td>${i.soAo || '-'}</td><td>${i.viTri || '-'}</td></tr>`
+        ).join('');
+      });
+  }
+</script>
+</body>
+</html>
