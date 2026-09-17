@@ -3,66 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ Thống Check-in Giải Bóng Đá</title>
-  <script src="https://unpkg.com/html5-qrcode"></script>
+  <title>Trạm Check-in Giải Bóng Đá</title>
+  <!-- Thư viện tạo mã QR tự động -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
+    
+    /* Navigation Tabs */
     .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-    .nav-tabs button { padding: 10px 20px; font-weight: bold; border: none; background: #e4e6eb; border-radius: 8px; cursor: pointer; }
+    .nav-tabs button { padding: 10px 20px; font-weight: bold; border: none; background: #e4e6eb; border-radius: 8px; cursor: pointer; font-size: 15px; }
     .nav-tabs button.active { background: #1C4A34; color: white; }
-    .tab-content { display: none; max-width: 800px; margin: auto; }
+    
+    .tab-content { display: none; max-width: 900px; margin: auto; }
     .tab-content.active { display: block; }
     
-    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
-    input { width: 80%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; }
-    .btn-main { width: 85%; padding: 12px; background: #1C4A34; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); text-align: center; }
     
-    #reader { width: 100%; max-width: 400px; margin: 15px auto; border-radius: 8px; overflow: hidden; }
+    /* Layout Quầy Check-in Chia 2 cột trên Máy tính / Laptop */
+    .checkin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: center; margin-top: 15px; }
+    @media (max-width: 768px) { .checkin-grid { grid-template-columns: 1fr; } }
     
-    .result-box { margin-top: 15px; padding: 15px; border-radius: 8px; text-align: left; display: none; }
+    .qr-box { background: #f8f9fa; border: 2px dashed #1C4A34; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; align-items: center; }
+    #qrcode { margin: 10px 0; }
+    
+    .input-box { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; }
+    .btn-main { width: 95%; padding: 12px; background: #1C4A34; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    
+    /* Box kết quả */
+    .result-box { margin-top: 20px; padding: 15px; border-radius: 8px; text-align: left; display: none; }
     .player { background: #e8f5e9; border: 1px solid #4caf50; }
     .btc { background: #fff8e1; border: 1px solid #ffb300; }
     
+    /* Bảng báo cáo chi tiết */
     table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 14px; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
     th { background-color: #1C4A34; color: white; }
-    .stat-box { display: flex; gap: 10px; margin-bottom: 15px; }
-    .stat-card { flex: 1; background: white; padding: 10px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .stat-box { display: flex; gap: 15px; margin-bottom: 15px; }
+    .stat-card { flex: 1; background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
   </style>
 </head>
 <body>
 
 <div class="nav-tabs">
-  <button id="tab1-btn" class="active" onclick="switchTab('checkin-tab')">QUÉT / CHECK-IN</button>
-  <button id="tab2-btn" onclick="switchTab('dashboard-tab'); loadDashboard();">DANH SÁCH & THỐNG KÊ</button>
+  <button id="tab1-btn" class="active" onclick="switchTab('checkin-tab')">QUẦY CHECK-IN SÂN BÓNG</button>
+  <button id="tab2-btn" onclick="switchTab('dashboard-tab'); loadDashboard();">DANH SÁCH & THỐNG KÊ CHI TIẾT</button>
 </div>
 
-<!-- TAB 1: CHECK IN -->
+<!-- TAB 1: QUẦY CHECK-IN -->
 <div id="checkin-tab" class="tab-content active">
   <div class="card">
-    <h2>CHECK-IN GIẢI BÓNG ĐÁ</h2>
+    <h2 style="color: #1C4A34; margin-top: 0;">CỔNG CHECK-IN GIẢI BÓNG ĐÁ</h2>
     
-    <input type="text" id="userInput" placeholder="Nhập SĐT hoặc MSNV...">
-    <br>
-    <button class="btn-main" onclick="submitCheckIn()">XÁC NHẬN CHECK-IN</button>
+    <div class="checkin-grid">
+      <!-- Cột 1: Hiển thị QR Code để người đến tự dùng điện thoại quét -->
+      <div class="qr-box">
+        <h3 style="margin: 5px 0; color: #333;">QUÉT MÃ TRÊN ĐIỆN THOẠI</h3>
+        <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Dùng Camera / Zalo quét mã này để tự mở trang xác thực</p>
+        <div id="qrcode"></div>
+        <span style="font-size: 12px; color: #888;">Mã QR điểm danh cố định</span>
+      </div>
 
-    <hr style="margin: 20px 0;">
-    <p><b>Hoặc Quét mã QR tại đây:</b></p>
-    <div id="reader"></div>
+      <!-- Cột 2: Nhập SĐT/MSNV hỗ trợ nhập tay trực tiếp -->
+      <div class="input-box">
+        <h3 style="margin: 5px 0; color: #333;">HOẶC NHẬP THÔNG TIN</h3>
+        <input type="text" id="userInput" placeholder="Nhập SĐT hoặc MSNV...">
+        <button class="btn-main" onclick="submitCheckIn()">XÁC NHẬN CHECK-IN</button>
+      </div>
+    </div>
 
+    <!-- Nơi hiển thị kết quả xác thực -->
     <div id="resultBox" class="result-box"></div>
   </div>
 </div>
 
-<!-- TAB 2: DASHBOARD THỐNG KÊ -->
+<!-- TAB 2: QUẢN LÝ DANH SÁCH CHI TIẾT -->
 <div id="dashboard-tab" class="tab-content">
   <div class="stat-box">
-    <div class="stat-card"><h3 id="countChecked">0</h3><p>Đã Check-in</p></div>
-    <div class="stat-card"><h3 id="countNotChecked">0</h3><p>Chưa Check-in</p></div>
+    <div class="stat-card"><h2 id="countChecked" style="color: green; margin:0;">0</h2><p style="margin:5px 0 0 0;">Đã Check-in</p></div>
+    <div class="stat-card"><h2 id="countNotChecked" style="color: red; margin:0;">0</h2><p style="margin:5px 0 0 0;">Chưa Check-in</p></div>
   </div>
 
   <div class="card" style="text-align: left; margin-bottom: 20px;">
-    <h3>Danh Sách CHƯA Check-in (Chi Tiết)</h3>
+    <h3 style="color: #c62828;">Danh Sách CHƯA Check-in (Chi Tiết)</h3>
     <div style="overflow-x:auto;">
       <table id="notCheckedTable">
         <thead>
@@ -74,7 +97,7 @@
   </div>
 
   <div class="card" style="text-align: left;">
-    <h3>Danh Sách ĐÃ Check-in (Chi Tiết)</h3>
+    <h3 style="color: #2e7d32;">Danh Sách ĐÃ Check-in (Chi Tiết)</h3>
     <div style="overflow-x:auto;">
       <table id="checkedTable">
         <thead>
@@ -87,17 +110,17 @@
 </div>
 
 <script>
-  // TÍCH HỢP LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY
-  const SCRIPT_URL = "DÁN_LINK_WEB_APP_URL_Ở_BƯỚC_1_VÀO_ĐÂY";
+  // Dán Web App URL thu được từ Google Apps Script của bạn vào đây
+  const SCRIPT_URL = "DÁN_LINK_WEB_APP_URL_TỪ_APPSCRIPT_VÀO_ĐÂY";
 
-  // Khởi tạo Camera Scanner
-  let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-  html5QrcodeScanner.render(onScanSuccess);
-
-  function onScanSuccess(decodedText) {
-    document.getElementById('userInput').value = decodedText;
-    submitCheckIn();
-  }
+  // Tự động tạo mã QR chính link trang web này ngay trên giao diện quầy
+  window.onload = function() {
+    new QRCode(document.getElementById("qrcode"), {
+      text: window.location.href,
+      width: 160,
+      height: 160
+    });
+  };
 
   function submitCheckIn() {
     const val = document.getElementById('userInput').value.trim();
@@ -106,7 +129,7 @@
     const resBox = document.getElementById('resultBox');
     resBox.style.display = 'block';
     resBox.className = 'result-box';
-    resBox.innerHTML = 'Đang kiểm tra dữ liệu...';
+    resBox.innerHTML = 'Đang tra cứu dữ liệu...';
 
     fetch(`${SCRIPT_URL}?query=${encodeURIComponent(val)}`)
       .then(res => res.json())
@@ -124,7 +147,7 @@
             <h3 style="color:#d97706; margin:0 0 10px 0;">BAN TỔ CHỨC / TRỌNG TÀI</h3>
             <p><b>Họ tên:</b> ${d.hoTen}</p>
             <p><b>Zone:</b> ${d.zone}</p>
-            <p style="color:green; font-weight:bold;">✓ CHECK-IN THÀNH CÔNG!</p>`;
+            <p style="color:green; font-weight:bold; margin-bottom:0;">✓ CHECK-IN THÀNH CÔNG!</p>`;
         } else {
           resBox.className = 'result-box player';
           resBox.innerHTML = `
@@ -132,8 +155,13 @@
             <p><b>Họ tên:</b> ${d.hoTen}</p>
             <p><b>Đội bóng:</b> ${d.tenDoi || 'Chưa cập nhật'}</p>
             <p><b>Số áo:</b> ${d.soAo || 'N/A'} | <b>Zone:</b> ${d.zone}</p>
-            <p style="color:green; font-weight:bold;">✓ CHECK-IN THÀNH CÔNG!</p>`;
+            <p style="color:green; font-weight:bold; margin-bottom:0;">✓ CHECK-IN THÀNH CÔNG!</p>`;
         }
+        // Xóa ô nhập sau khi checkin xong
+        document.getElementById('userInput').value = '';
+      })
+      .catch(err => {
+        resBox.innerHTML = `<b style="color:red;">Lỗi kết nối Server! Vui lòng kiểm tra lại cấu hình API.</b>`;
       });
   }
 
@@ -152,13 +180,13 @@
         document.getElementById('countChecked').innerText = data.checkedIn.length;
         document.getElementById('countNotChecked').innerText = data.notCheckedIn.length;
 
-        // Render Bảng Chưa Check-in
+        // Bảng Chưa Check-in
         const notCheckTbody = document.querySelector('#notCheckedTable tbody');
         notCheckTbody.innerHTML = data.notCheckedIn.map(i => 
           `<tr><td>${i.hoTen}</td><td>${i.msnv || i.sdt}</td><td>${i.tenDoi || '-'}</td><td>${i.zone}</td></tr>`
         ).join('');
 
-        // Render Bảng Đã Check-in
+        // Bảng Đã Check-in
         const checkTbody = document.querySelector('#checkedTable tbody');
         checkTbody.innerHTML = data.checkedIn.map(i => 
           `<tr><td>${i.hoTen}</td><td>${i.msnv || i.sdt}</td><td>${i.tenDoi || '-'}</td><td>${i.zone}</td><td>${i.soAo || '-'}</td></tr>`
