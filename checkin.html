@@ -3,77 +3,168 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Check-in Giải Bóng Đá</title>
+  <title>Hệ Thống Check-in Giải Bóng Đá</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f6f9; text-align: center; padding: 20px; margin: 0; }
-    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-    h2 { color: #1C4A34; margin-bottom: 20px; }
-    input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; }
-    button { width: 95%; padding: 12px; background: #1C4A34; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
-    .result-box { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; text-align: left; }
-    .player { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; }
-    .btc { background: #fff8e1; border: 1px solid #ffb300; color: #f57f17; }
-    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: white; margin-bottom: 10px; }
-    .badge-player { background: #4caf50; }
-    .badge-btc { background: #ff9800; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
+    .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .nav-tabs button { padding: 10px 20px; font-weight: bold; border: none; background: #e4e6eb; border-radius: 8px; cursor: pointer; }
+    .nav-tabs button.active { background: #1C4A34; color: white; }
+    .tab-content { display: none; max-width: 800px; margin: auto; }
+    .tab-content.active { display: block; }
+    
+    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+    input { width: 80%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; }
+    .btn-main { width: 85%; padding: 12px; background: #1C4A34; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    
+    #reader { width: 100%; max-width: 400px; margin: 15px auto; border-radius: 8px; overflow: hidden; }
+    
+    .result-box { margin-top: 15px; padding: 15px; border-radius: 8px; text-align: left; display: none; }
+    .player { background: #e8f5e9; border: 1px solid #4caf50; }
+    .btc { background: #fff8e1; border: 1px solid #ffb300; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 14px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #1C4A34; color: white; }
+    .stat-box { display: flex; gap: 10px; margin-bottom: 15px; }
+    .stat-card { flex: 1; background: white; padding: 10px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <h2>CHECK-IN GIẢI BÓNG ĐÁ</h2>
-  <p>Nhập Số điện thoại hoặc Mã ID của bạn để xác thực:</p>
-  
-  <input type="text" id="userInput" placeholder="Nhập SĐT / Mã ID...">
-  <button onclick="processCheckIn()">XÁC NHẬN CHECK-IN</button>
+<div class="nav-tabs">
+  <button id="tab1-btn" class="active" onclick="switchTab('checkin-tab')">QUÉT / CHECK-IN</button>
+  <button id="tab2-btn" onclick="switchTab('dashboard-tab'); loadDashboard();">DANH SÁCH & THỐNG KÊ</button>
+</div>
 
-  <!-- Khối hiển thị kết quả cho Cầu thủ -->
-  <div id="playerResult" class="result-box player">
-    <span class="badge badge-player">CẦU THỦ</span>
-    <p><strong>Họ và tên:</strong> <span id="pName"></span></p>
-    <p><strong>Đội bóng:</strong> <span id="pTeam"></span></p>
-    <p><strong>Số áo thi đấu:</strong> <span id="pNumber"></span></p>
-    <p style="color: green; font-weight: bold; margin-top: 10px;">✓ Check-in thành công!</p>
+<!-- TAB 1: CHECK IN -->
+<div id="checkin-tab" class="tab-content active">
+  <div class="card">
+    <h2>CHECK-IN GIẢI BÓNG ĐÁ</h2>
+    
+    <input type="text" id="userInput" placeholder="Nhập SĐT hoặc MSNV...">
+    <br>
+    <button class="btn-main" onclick="submitCheckIn()">XÁC NHẬN CHECK-IN</button>
+
+    <hr style="margin: 20px 0;">
+    <p><b>Hoặc Quét mã QR tại đây:</b></p>
+    <div id="reader"></div>
+
+    <div id="resultBox" class="result-box"></div>
+  </div>
+</div>
+
+<!-- TAB 2: DASHBOARD THỐNG KÊ -->
+<div id="dashboard-tab" class="tab-content">
+  <div class="stat-box">
+    <div class="stat-card"><h3 id="countChecked">0</h3><p>Đã Check-in</p></div>
+    <div class="stat-card"><h3 id="countNotChecked">0</h3><p>Chưa Check-in</p></div>
   </div>
 
-  <!-- Khối hiển thị kết quả cho BTC -->
-  <div id="btcResult" class="result-box btc">
-    <span class="badge badge-btc">BAN TỔ CHỨC</span>
-    <p><strong>Họ và tên:</strong> <span id="bName"></span></p>
-    <p><strong>Chức danh:</strong> <span id="bRole"></span></p>
-    <p style="color: green; font-weight: bold; margin-top: 10px;">✓ Check-in thành công!</p>
+  <div class="card" style="text-align: left; margin-bottom: 20px;">
+    <h3>Danh Sách CHƯA Check-in (Chi Tiết)</h3>
+    <div style="overflow-x:auto;">
+      <table id="notCheckedTable">
+        <thead>
+          <tr><th>Họ Tên</th><th>MSNV/SĐT</th><th>Đội</th><th>Zone</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="text-align: left;">
+    <h3>Danh Sách ĐÃ Check-in (Chi Tiết)</h3>
+    <div style="overflow-x:auto;">
+      <table id="checkedTable">
+        <thead>
+          <tr><th>Họ Tên</th><th>MSNV/SĐT</th><th>Đội</th><th>Zone</th><th>Số Áo</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script>
-  function processCheckIn() {
-    const input = document.getElementById('userInput').value.trim();
-    if (!input) {
-      alert("Vui lòng nhập Số điện thoại hoặc Mã ID!");
-      return;
-    }
+  // TÍCH HỢP LINK GOOGLE APPS SCRIPT CỦA BẠN VÀO ĐÂY
+  const SCRIPT_URL = "DÁN_LINK_WEB_APP_URL_Ở_BƯỚC_1_VÀO_ĐÂY";
 
-    // Ẩn kết quả cũ
-    document.getElementById('playerResult').style.display = 'none';
-    document.getElementById('btcResult').style.display = 'none';
+  // Khởi tạo Camera Scanner
+  let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+  html5QrcodeScanner.render(onScanSuccess);
 
-    // DEMO GIẢ LẬP KẾT QUẢ (Sau này sẽ kết nối API Google Sheets)
-    if (input === "0901234567") {
-      // Trường hợp là Cầu thủ
-      document.getElementById('pName').innerText = "Nguyễn Văn A";
-      document.getElementById('pTeam').innerText = "FC Anh Em";
-      document.getElementById('pNumber').innerText = "10";
-      document.getElementById('playerResult').style.display = 'block';
-    } else if (input === "0909999888") {
-      // Trường hợp là BTC
-      document.getElementById('bName').innerText = "Trần Văn B";
-      document.getElementById('bRole').innerText = "Trọng tài chính";
-      document.getElementById('btcResult').style.display = 'block';
-    } else {
-      alert("Không tìm thấy thông tin trong danh sách!");
-    }
+  function onScanSuccess(decodedText) {
+    document.getElementById('userInput').value = decodedText;
+    submitCheckIn();
+  }
+
+  function submitCheckIn() {
+    const val = document.getElementById('userInput').value.trim();
+    if (!val) return alert("Vui lòng nhập MSNV hoặc SĐT!");
+
+    const resBox = document.getElementById('resultBox');
+    resBox.style.display = 'block';
+    resBox.className = 'result-box';
+    resBox.innerHTML = 'Đang kiểm tra dữ liệu...';
+
+    fetch(`${SCRIPT_URL}?query=${encodeURIComponent(val)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success) {
+          resBox.style.backgroundColor = '#ffebee';
+          resBox.innerHTML = `<b style="color:red;">❌ ${data.message}</b>`;
+          return;
+        }
+        
+        const d = data.data;
+        if (d.isBTC) {
+          resBox.className = 'result-box btc';
+          resBox.innerHTML = `
+            <h3 style="color:#d97706; margin:0 0 10px 0;">BAN TỔ CHỨC / TRỌNG TÀI</h3>
+            <p><b>Họ tên:</b> ${d.hoTen}</p>
+            <p><b>Zone:</b> ${d.zone}</p>
+            <p style="color:green; font-weight:bold;">✓ CHECK-IN THÀNH CÔNG!</p>`;
+        } else {
+          resBox.className = 'result-box player';
+          resBox.innerHTML = `
+            <h3 style="color:#15803d; margin:0 0 10px 0;">CẦU THỦ THI ĐẤU</h3>
+            <p><b>Họ tên:</b> ${d.hoTen}</p>
+            <p><b>Đội bóng:</b> ${d.tenDoi || 'Chưa cập nhật'}</p>
+            <p><b>Số áo:</b> ${d.soAo || 'N/A'} | <b>Zone:</b> ${d.zone}</p>
+            <p style="color:green; font-weight:bold;">✓ CHECK-IN THÀNH CÔNG!</p>`;
+        }
+      });
+  }
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (tabId === 'checkin-tab') document.getElementById('tab1-btn').classList.add('active');
+    else document.getElementById('tab2-btn').classList.add('active');
+  }
+
+  function loadDashboard() {
+    fetch(`${SCRIPT_URL}?action=getDashboard`)
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById('countChecked').innerText = data.checkedIn.length;
+        document.getElementById('countNotChecked').innerText = data.notCheckedIn.length;
+
+        // Render Bảng Chưa Check-in
+        const notCheckTbody = document.querySelector('#notCheckedTable tbody');
+        notCheckTbody.innerHTML = data.notCheckedIn.map(i => 
+          `<tr><td>${i.hoTen}</td><td>${i.msnv || i.sdt}</td><td>${i.tenDoi || '-'}</td><td>${i.zone}</td></tr>`
+        ).join('');
+
+        // Render Bảng Đã Check-in
+        const checkTbody = document.querySelector('#checkedTable tbody');
+        checkTbody.innerHTML = data.checkedIn.map(i => 
+          `<tr><td>${i.hoTen}</td><td>${i.msnv || i.sdt}</td><td>${i.tenDoi || '-'}</td><td>${i.zone}</td><td>${i.soAo || '-'}</td></tr>`
+        ).join('');
+      });
   }
 </script>
-
 </body>
 </html>
