@@ -119,12 +119,64 @@
 </div>
 
 <script>
-  // DÁN URL WEB APP CỦA APPS SCRIPT VÀO DÒNG DƯỚI ĐÂY:
-  const SCRIPT_URL = "DÁN_WEB_APP_URL_TỪ_GOOGLE_APPS_SCRIPT_VÀO_ĐÂY";
+  // DÁN ĐƯỜNG LINK CSV ĐÃ PUBLISH Ở BƯỚC 1 VÀO ĐÂY:
+  const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSRr99PDMjPy5cZgdiF5hG4U7MJYQmgja7GZNFkF2aQbDt2kmz3-nFb3dgNWKt4MPSlUy8ZrImx8uRL/pub?gid=1648393565&single=true&output=csv";
+
+  let cachedData = [];
+  let checkedList = new Set(JSON.parse(localStorage.getItem('checkedList') || '[]'));
 
   window.onload = function() {
     new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 160, height: 160 });
+    fetchCSVData();
   };
+
+  function cleanStr(str) {
+    if (!str) return "";
+    return str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, " ").trim();
+  }
+
+  function parseCSV(text) {
+    let lines = text.split('\n');
+    let result = [];
+    for (let i = 1; i < lines.length; i++) {
+      let row = lines[i].split(',').map(cell => cell.replace(/^"(.*)"$/, '$1').trim());
+      if (row[0]) {
+        result.push({
+          hoTen: row[0] || "",
+          msnv: row[1] || "",
+          sdt: row[2] || "",
+          zone: row[3] || "",
+          soAo: row[4] || "",
+          tenDoi: row[5] || "",
+          viTri: row[6] || "",
+          isBTC: false
+        });
+      }
+      // Quét thêm BTC cột I - K
+      if (row[8]) {
+        result.push({
+          hoTen: row[8] || "",
+          msnv: "-",
+          sdt: "-",
+          zone: "BTC",
+          soAo: "-",
+          tenDoi: "Ban Tổ Chức",
+          viTri: row[10] || "BTC",
+          isBTC: true
+        });
+      }
+    }
+    return result;
+  }
+
+  function fetchCSVData() {
+    fetch(CSV_URL)
+      .then(res => res.text())
+      .then(text => {
+        cachedData = parseCSV(text);
+      })
+      .catch(err => alert("Không thể tải dữ liệu Google Sheet. Vui lòng kiểm tra lại link CSV!"));
+  }
 
   function submitCheckIn() {
     const val = document.getElementById('userInput').value.trim();
@@ -133,30 +185,32 @@
     const resBox = document.getElementById('resultBox');
     resBox.style.display = 'block';
     resBox.className = 'result-box';
-    resBox.innerHTML = 'Đang tra cứu dữ liệu...';
 
-    fetch(SCRIPT_URL + "?query=" + encodeURIComponent(val))
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success) {
-          resBox.style.backgroundColor = '#ffebee';
-          resBox.innerHTML = '<b style="color:red;">❌ ' + data.message + '</b>';
-          return;
-        }
-        const d = data.data;
-        if (d.isBTC) {
-          resBox.className = 'result-box btc';
-          resBox.innerHTML = '<h3 style="color:#d97706; margin:0 0 5px 0;">BAN TỔ CHỨC / TRỌNG TÀI</h3><p><b>Họ tên:</b> ' + d.hoTen + ' | <b>Chức danh:</b> ' + d.viTri + '</p><p style="color:green; font-weight:bold; margin:0;">✓ CHECK-IN THÀNH CÔNG!</p>';
-        } else {
-          resBox.className = 'result-box player';
-          resBox.innerHTML = '<h3 style="color:#15803d; margin:0 0 5px 0;">CẦU THỦ THI ĐẤU</h3><p><b>Họ tên:</b> ' + d.hoTen + ' | <b>Đội:</b> ' + (d.tenDoi || 'Chưa xếp') + '</p><p><b>Số áo:</b> ' + (d.soAo || 'N/A') + ' | <b>SĐT:</b> ' + d.sdt + ' | <b>Zone:</b> ' + d.zone + '</p><p style="color:green; font-weight:bold; margin:0;">✓ CHECK-IN THÀNH CÔNG!</p>';
-        }
-        document.getElementById('userInput').value = '';
-      })
-      .catch(err => {
-        resBox.style.backgroundColor = '#ffebee';
-        resBox.innerHTML = '<b style="color:red;">❌ Lỗi kết nối Google Sheet! Kiểm tra lại URL Web App.</b>';
-      });
+    const cleanQuery = cleanStr(val);
+    let match = cachedData.find(item => 
+      cleanStr(item.hoTen) === cleanQuery || 
+      cleanStr(item.msnv) === cleanQuery || 
+      cleanStr(item.sdt) === cleanQuery
+    );
+
+    if (!match) {
+      resBox.style.backgroundColor = '#ffebee';
+      resBox.innerHTML = '<b style="color:red;">❌ Không tìm thấy thông tin trong danh sách!</b>';
+      return;
+    }
+
+    // Ghi nhận Check-in
+    checkedList.add(match.hoTen);
+    localStorage.setItem('checkedList', JSON.stringify([...checkedList]));
+
+    if (match.isBTC) {
+      resBox.className = 'result-box btc';
+      resBox.innerHTML = '<h3 style="color:#d97706; margin:0 0 5px 0;">BAN TỔ CHỨC / TRỌNG TÀI</h3><p><b>Họ tên:</b> ' + match.hoTen + ' | <b>Chức danh:</b> ' + match.viTri + '</p><p style="color:green; font-weight:bold; margin:0;">✓ CHECK-IN THÀNH CÔNG!</p>';
+    } else {
+      resBox.className = 'result-box player';
+      resBox.innerHTML = '<h3 style="color:#15803d; margin:0 0 5px 0;">CẦU THỦ THI ĐẤU</h3><p><b>Họ tên:</b> ' + match.hoTen + ' | <b>Đội:</b> ' + (match.tenDoi || 'Chưa xếp') + '</p><p><b>Số áo:</b> ' + (match.soAo || 'N/A') + ' | <b>SĐT:</b> ' + match.sdt + ' | <b>Zone:</b> ' + match.zone + '</p><p style="color:green; font-weight:bold; margin:0;">✓ CHECK-IN THÀNH CÔNG!</p>';
+    }
+    document.getElementById('userInput').value = '';
   }
 
   function switchTab(tabId) {
@@ -168,47 +222,52 @@
   }
 
   function loadDashboard() {
-    fetch(SCRIPT_URL + "?action=getDashboard")
-      .then(res => res.json())
-      .then(data => {
-        const allData = [...data.checkedIn, ...data.notCheckedIn];
-        document.getElementById('countChecked').innerText = data.checkedIn.length;
-        document.getElementById('countNotChecked').innerText = data.notCheckedIn.length;
+    let checkedIn = [];
+    let notCheckedIn = [];
 
-        // 1. Thống kê theo Đội
-        const teams = {};
-        allData.forEach(i => {
-          let team = i.tenDoi || 'Khác / BTC';
-          if (!teams[team]) teams[team] = { checked: 0, total: 0 };
-          teams[team].total++;
-          if (i.status === 'Đã check-in') teams[team].checked++;
-        });
-        document.querySelector('#teamStatTable tbody').innerHTML = Object.keys(teams).map(t => 
-          '<tr><td><b>' + t + '</b></td><td>' + teams[t].checked + '</td><td>' + teams[t].total + '</td></tr>'
-        ).join('');
+    cachedData.forEach(item => {
+      if (checkedList.has(item.hoTen)) {
+        checkedIn.push(item);
+      } else {
+        notCheckedIn.push(item);
+      }
+    });
 
-        // 2. Thống kê theo Zone
-        const zones = {};
-        allData.forEach(i => {
-          let z = i.zone || 'BTC / Chưa có Zone';
-          if (!zones[z]) zones[z] = { checked: 0, total: 0 };
-          zones[z].total++;
-          if (i.status === 'Đã check-in') zones[z].checked++;
-        });
-        document.querySelector('#zoneStatTable tbody').innerHTML = Object.keys(zones).map(z => 
-          '<tr><td><b>' + z + '</b></td><td>' + zones[z].checked + '</td><td>' + zones[z].total + '</td></tr>'
-        ).join('');
+    document.getElementById('countChecked').innerText = checkedIn.length;
+    document.getElementById('countNotChecked').innerText = notCheckedIn.length;
 
-        // 3. Render Chi Tiết Chưa Check-in
-        document.querySelector('#notCheckedTable tbody').innerHTML = data.notCheckedIn.map(i => 
-          '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
-        ).join('');
+    // 1. Thống kê theo Đội
+    const teams = {};
+    cachedData.forEach(i => {
+      let team = i.tenDoi || 'Khác / BTC';
+      if (!teams[team]) teams[team] = { checked: 0, total: 0 };
+      teams[team].total++;
+      if (checkedList.has(i.hoTen)) teams[team].checked++;
+    });
+    document.querySelector('#teamStatTable tbody').innerHTML = Object.keys(teams).map(t => 
+      '<tr><td><b>' + t + '</b></td><td>' + teams[t].checked + '</td><td>' + teams[t].total + '</td></tr>'
+    ).join('');
 
-        // 4. Render Chi Tiết Đã Check-in
-        document.querySelector('#checkedTable tbody').innerHTML = data.checkedIn.map(i => 
-          '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
-        ).join('');
-      });
+    // 2. Thống kê theo Zone
+    const zones = {};
+    cachedData.forEach(i => {
+      let z = i.zone || 'BTC / Chưa có Zone';
+      if (!zones[z]) zones[z] = { checked: 0, total: 0 };
+      zones[z].total++;
+      if (checkedList.has(i.hoTen)) zones[z].checked++;
+    });
+    document.querySelector('#zoneStatTable tbody').innerHTML = Object.keys(zones).map(z => 
+      '<tr><td><b>' + z + '</b></td><td>' + zones[z].checked + '</td><td>' + zones[z].total + '</td></tr>'
+    ).join('');
+
+    // 3. Render Danh sách Chi tiết
+    document.querySelector('#notCheckedTable tbody').innerHTML = notCheckedIn.map(i => 
+      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
+    ).join('');
+
+    document.querySelector('#checkedTable tbody').innerHTML = checkedIn.map(i => 
+      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
+    ).join('');
   }
 </script>
 </body>
