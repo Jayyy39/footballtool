@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check-in Giải Bóng Đá</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f9; text-align: center; padding: 20px; margin: 0; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+    h2 { color: #1C4A34; margin-bottom: 20px; }
+    input { width: 90%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; text-align: center; }
+    button { width: 95%; padding: 12px; background: #1C4A34; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .result-box { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; text-align: left; }
+    .player { background: #e8f5e9; border: 1px solid #4caf50; color: #2e7d32; }
+    .btc { background: #fff8e1; border: 1px solid #ffb300; color: #f57f17; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: white; margin-bottom: 10px; }
+    .badge-player { background: #4caf50; }
+    .badge-btc { background: #ff9800; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>CHECK-IN GIẢI BÓNG ĐÁ</h2>
+  <p>Nhập Số điện thoại hoặc Mã ID của bạn để xác thực:</p>
+  
+  <input type="text" id="userInput" placeholder="Nhập SĐT / Mã ID...">
+  <button onclick="processCheckIn()">XÁC NHẬN CHECK-IN</button>
+
+  <!-- Khối hiển thị kết quả cho Cầu thủ -->
+  <div id="playerResult" class="result-box player">
+    <span class="badge badge-player">CẦU THỦ</span>
+    <p><strong>Họ và tên:</strong> <span id="pName"></span></p>
+    <p><strong>Đội bóng:</strong> <span id="pTeam"></span></p>
+    <p><strong>Số áo thi đấu:</strong> <span id="pNumber"></span></p>
+    <p style="color: green; font-weight: bold; margin-top: 10px;">✓ Check-in thành công!</p>
+  </div>
+
+  <!-- Khối hiển thị kết quả cho BTC -->
+  <div id="btcResult" class="result-box btc">
+    <span class="badge badge-btc">BAN TỔ CHỨC</span>
+    <p><strong>Họ và tên:</strong> <span id="bName"></span></p>
+    <p><strong>Chức danh:</strong> <span id="bRole"></span></p>
+    <p style="color: green; font-weight: bold; margin-top: 10px;">✓ Check-in thành công!</p>
+  </div>
+</div>
+
+<script>
+  function processCheckIn() {
+    const input = document.getElementById('userInput').value.trim();
+    if (!input) {
+      alert("Vui lòng nhập Số điện thoại hoặc Mã ID!");
+      return;
+    }
+
+    // Ẩn kết quả cũ
+    document.getElementById('playerResult').style.display = 'none';
+    document.getElementById('btcResult').style.display = 'none';
+
+    // DEMO GIẢ LẬP KẾT QUẢ (Sau này sẽ kết nối API Google Sheets)
+    if (input === "0901234567") {
+      // Trường hợp là Cầu thủ
+      document.getElementById('pName').innerText = "Nguyễn Văn A";
+      document.getElementById('pTeam').innerText = "FC Anh Em";
+      document.getElementById('pNumber').innerText = "10";
+      document.getElementById('playerResult').style.display = 'block';
+    } else if (input === "0909999888") {
+      // Trường hợp là BTC
+      document.getElementById('bName').innerText = "Trần Văn B";
+      document.getElementById('bRole').innerText = "Trọng tài chính";
+      document.getElementById('btcResult').style.display = 'block';
+    } else {
+      alert("Không tìm thấy thông tin trong danh sách!");
+    }
+  }
+</script>
+
+</body>
+</html>
