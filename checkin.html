@@ -7,8 +7,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 15px; }
-    .nav-tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .nav-tabs button { padding: 10px 18px; font-weight: bold; border: none; background: #e4e6eb; border-radius: 8px; cursor: pointer; font-size: 14px; }
+    .nav-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+    .nav-tabs button { padding: 10px 16px; font-weight: bold; border: none; background: #e4e6eb; border-radius: 8px; cursor: pointer; font-size: 14px; }
     .nav-tabs button.active { background: #1C4A34; color: white; }
     
     .tab-content { display: none; max-width: 1050px; margin: auto; }
@@ -20,7 +20,7 @@
     
     input, textarea { width: 90%; max-width: 600px; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; }
     input { text-align: center; }
-    textarea { height: 180px; font-family: monospace; font-size: 12px; white-space: pre; }
+    textarea { height: 180px; font-family: monospace; font-size: 12px; }
     
     .btn-main { padding: 12px 25px; background: #1C4A34; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; }
     .btn-danger { background: #c62828; margin-left: 10px; }
@@ -123,16 +123,16 @@
   </div>
 </div>
 
-<!-- TAB 3: NHẬP DỮ LIỆU COPY TỪ GOOGLE SHEETS -->
+<!-- TAB 3: TRANG DÁN DỮ LIỆU -->
 <div id="upload-tab" class="tab-content">
   <div class="card" style="text-align: left;">
-    <h3 style="color: #1C4A34; margin-top: 0;">📋 DÁN DỮ LIỆU TỪ GOOGLE SHEETS (CỘT A ĐẾN K)</h3>
-    <p style="font-size: 13px; color: #555;">Hướng dẫn: Mở Google Sheet tab <code>checkin</code>, chọn dữ liệu từ Cột A đến Cột K (hoặc bấm <code>Ctrl + A</code>), nhấn <b>Ctrl + C</b> và dán (<b>Ctrl + V</b>) vào khung bên dưới:</p>
+    <h3 style="color: #1C4A34; margin-top: 0;">📋 TRANG NHẬP DỮ LIỆU</h3>
+    <p style="font-size: 13px; color: #555;">Dán toàn bộ dữ liệu từ Cột A đến Cột K từ Google Sheets vào đây:</p>
     
-    <textarea id="pasteDataInput" placeholder="Dán dữ liệu Google Sheets vào đây..."></textarea>
+    <textarea id="pasteDataInput" placeholder="Dán chữ copy từ Google Sheet vào đây..."></textarea>
     <br>
     <button class="btn-main" onclick="processPastedData()">NẠP DỮ LIỆU VÀO TOOL</button>
-    <button class="btn-main btn-danger" onclick="resetAllData()">XÓA TOÀN BỘ DATA & CHECK-IN</button>
+    <button class="btn-main btn-danger" onclick="resetAllData()">XÓA TOÀN BỘ DATA</button>
 
     <div id="uploadStatus" style="margin-top: 15px; font-weight: bold;"></div>
   </div>
@@ -144,6 +144,21 @@
 
   window.onload = function() {
     new QRCode(document.getElementById("qrcode"), { text: window.location.href, width: 160, height: 160 });
+    
+    // TỰ ĐỘNG CHECK-IN KHI TRUY CẬP TỪ MÃ QR CÁ NHÂN (Tham số ?q=...)
+    const urlParams = new URLSearchParams(window.location.search);
+    const queryParam = urlParams.get('q') || urlParams.get('query');
+    if (queryParam) {
+      document.getElementById('userInput').value = queryParam;
+      submitCheckIn();
+    }
+
+    // Thiết lập Polling tự động làm mới Dashboard nếu đang mở Tab 2
+    setInterval(() => {
+      if (document.getElementById('dashboard-tab').classList.contains('active')) {
+        loadDashboard();
+      }
+    }, 5000);
   };
 
   function cleanStr(str) {
@@ -153,24 +168,18 @@
 
   function processPastedData() {
     const rawText = document.getElementById('pasteDataInput').value.trim();
-    if (!rawText) return alert("Vui lòng dán dữ liệu vào ô!");
+    if (!rawText) return alert("Vui lòng dán chữ copy từ Google Sheet vào ô!");
 
     const lines = rawText.split('\n');
     let parsedData = [];
-    let isHeader = true;
 
     for (let line of lines) {
-      let cols = line.split('\t').map(c => c.trim());
+      let cols = line.includes('\t') ? line.split('\t') : line.split(',');
+      cols = cols.map(c => c.trim().replace(/^"(.*)"$/, '$1'));
+
       if (cols.length < 1) continue;
+      if (cleanStr(cols[0]) === 'ho va ten' || cleanStr(cols[0]) === 'ho ten') continue;
 
-      // Bỏ qua dòng tiêu đề
-      if (isHeader && (cleanStr(cols[0]) === 'ho va ten' || cleanStr(cols[0]) === 'ho ten')) {
-        isHeader = false;
-        continue;
-      }
-      isHeader = false;
-
-      // Quét Cầu Thủ (Cột A - G)
       if (cols[0]) {
         parsedData.push({
           hoTen: cols[0] || "",
@@ -184,7 +193,6 @@
         });
       }
 
-      // Quét BTC (Cột I - K) -> tương ứng chỉ số mảng [8], [9], [10]
       if (cols[8]) {
         parsedData.push({
           hoTen: cols[8] || "",
@@ -200,7 +208,7 @@
     }
 
     if (parsedData.length === 0) {
-      alert("Không đọc được dữ liệu. Hãy đảm bảo copy đúng các cột từ Google Sheet!");
+      alert("Không tìm thấy dữ liệu hợp lệ!");
       return;
     }
 
@@ -208,18 +216,18 @@
     localStorage.setItem('football_data', JSON.stringify(cachedData));
 
     document.getElementById('uploadStatus').style.color = 'green';
-    document.getElementById('uploadStatus').innerText = `✓ Đã nạp thành công ${cachedData.length} nhân sự (Cầu thủ & BTC)!`;
+    document.getElementById('uploadStatus').innerText = `✓ Đã nạp thành công ${cachedData.length} người (Cầu thủ & BTC)!`;
     document.getElementById('pasteDataInput').value = '';
   }
 
   function resetAllData() {
-    if (confirm("Bạn có chắc chắn muốn xóa toàn bộ danh sách và lịch sử Check-in không?")) {
+    if (confirm("Xóa toàn bộ dữ liệu và danh sách check-in?")) {
       localStorage.removeItem('football_data');
       localStorage.removeItem('football_checkedList');
       cachedData = [];
       checkedList.clear();
       document.getElementById('uploadStatus').style.color = 'red';
-      document.getElementById('uploadStatus').innerText = "Đã xóa toàn bộ dữ liệu!";
+      document.getElementById('uploadStatus').innerText = "Đã xóa sạch dữ liệu!";
     }
   }
 
@@ -233,13 +241,12 @@
 
     if (cachedData.length === 0) {
       resBox.style.backgroundColor = '#ffebee';
-      resBox.innerHTML = '<b style="color:red;">❌ Chưa có dữ liệu! Vui lòng qua Tab "NHẬP DỮ LIỆU" để dán danh sách trước.</b>';
+      resBox.innerHTML = '<b style="color:red;">❌ Chưa có dữ liệu! Vui lòng bấm sang tab "⚙️ NHẬP DỮ LIỆU" để dán danh sách trước.</b>';
       return;
     }
 
     const cleanQuery = cleanStr(val);
     
-    // Ưu tiên tìm Cầu thủ trước, nếu không có mới tìm BTC
     let match = cachedData.find(item => !item.isBTC && (cleanStr(item.hoTen) === cleanQuery || cleanStr(item.msnv) === cleanQuery || cleanStr(item.sdt) === cleanQuery));
     if (!match) {
       match = cachedData.find(item => item.isBTC && (cleanStr(item.hoTen) === cleanQuery || cleanStr(item.msnv) === cleanQuery || cleanStr(item.sdt) === cleanQuery));
@@ -278,7 +285,6 @@
     let checkedIn = [];
     let notCheckedIn = [];
 
-    // Lọc theo ưu tiên Cầu thủ trước
     let uniqueList = [];
     let names = new Set();
     
@@ -300,7 +306,6 @@
     document.getElementById('countChecked').innerText = checkedIn.length;
     document.getElementById('countNotChecked').innerText = notCheckedIn.length;
 
-    // 1. Thống kê theo Đội
     const teams = {};
     uniqueList.forEach(i => {
       let team = i.tenDoi || 'Khác / BTC';
@@ -312,7 +317,6 @@
       '<tr><td><b>' + t + '</b></td><td>' + teams[t].checked + '</td><td>' + teams[t].total + '</td></tr>'
     ).join('');
 
-    // 2. Thống kê theo Zone
     const zones = {};
     uniqueList.forEach(i => {
       let z = i.zone || 'BTC / Chưa có Zone';
@@ -324,13 +328,12 @@
       '<tr><td><b>' + z + '</b></td><td>' + zones[z].checked + '</td><td>' + zones[z].total + '</td></tr>'
     ).join('');
 
-    // 3. Render Danh sách Chi tiết
     document.querySelector('#notCheckedTable tbody').innerHTML = notCheckedIn.map(i => 
-      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
+      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
     ).join('');
 
     document.querySelector('#checkedTable tbody').innerHTML = checkedIn.map(i => 
-      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.zone || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
+      '<tr><td>' + i.hoTen + '</td><td>' + (i.msnv || '-') + '</td><td>' + (i.sdt || '-') + '</td><td>' + (i.tenDoi || '-') + '</td><td>' + (i.soAo || '-') + '</td><td>' + (i.viTri || '-') + '</td></tr>'
     ).join('');
   }
 </script>
