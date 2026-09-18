@@ -1555,7 +1555,7 @@ function renderCommsModalBody(){
     <div class="comment-thread">
       <label style="display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;font-weight:600;">Feedback / Góp ý (${(d.comments||[]).length})</label>
       <div id="commentList">${(d.comments||[]).map(c=>`
-        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author \vert{}\vert{} 'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
+        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author || 'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
       `).join('') || '<div class="empty-note">Chưa có góp ý nào.</div>'}</div>
       <div class="comment-add">
         <input type="text" id="cm-comment-author" placeholder="Tên bạn" style="max-width:120px;">
