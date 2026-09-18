@@ -719,8 +719,8 @@
   <span>Dữ liệu dùng chung, tự đồng bộ cho mọi người có link này. Nên chỉ chia sẻ link trong nội bộ công ty.</span>
   <span>
     <button class="btn-danger-outline" id="exportBtn" type="button">Xuất dữ liệu (.json)</button>
-    <button class="btn-danger-outline" id="importBtnTrigger" type="button">Nhập dữ liệu</button>
-    <input type="file" id="importFile" accept="application/json" style="display:none;">
+    <button class="btn-danger-outline" id="importBtnTrigger" type="button">Nhập dữ liệu (.xlsx / .json)</button>
+    <input type="file" id="importFile" accept=".json,.xlsx,.xls" style="display:none;">
   </span>
 </footer>
 
@@ -792,16 +792,24 @@ function mergeIntoState(parsed){
 
 async function fetchRemoteState(){
   try{
-    const res = await window.storage.get(STORAGE_KEY, true);
-    return res && res.value ? JSON.parse(res.value) : null;
+    if(window.storage && typeof window.storage.get === 'function'){
+      const res = await window.storage.get(STORAGE_KEY, true);
+      return res && res.value ? JSON.parse(res.value) : null;
+    }
+    const local = localStorage.getItem(STORAGE_KEY);
+    return local ? JSON.parse(local) : null;
   }catch(e){
-    return null; // key doesn't exist yet on first run
+    return null;
   }
 }
 async function persistState(){
   try{
-    const res = await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
-    if(!res) throw new Error('no result');
+    if(window.storage && typeof window.storage.set === 'function'){
+      const res = await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+      if(!res) throw new Error('no result');
+    } else {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
     lastSyncTime = Date.now();
     updateSyncIndicator();
     return true;
@@ -810,8 +818,7 @@ async function persistState(){
     return false;
   }
 }
-// Read freshest shared data, apply a local change on top of it, then write back —
-// reduces (but cannot fully eliminate) the chance of stomping a concurrent edit from a teammate.
+
 async function commitChange(mutatorFn){
   const remote = await fetchRemoteState();
   if(remote) mergeIntoState(remote);
@@ -821,7 +828,7 @@ async function commitChange(mutatorFn){
   return ok;
 }
 async function pollRefresh(){
-  if(isModalOpen) return; // don't yank the rug from under someone mid-edit
+  if(isModalOpen) return;
   const remote = await fetchRemoteState();
   if(remote){
     const incoming = JSON.stringify(remote);
@@ -863,15 +870,14 @@ const GROUP_TIME_SLOTS = [
   {date:'19/9/2026', time:'9:00 - 10:00', san:{A:1,B:4}},
   {date:'19/9/2026', time:'10:00 - 11:00',san:{C:1,D:4}},
 ];
-// Build explicit group match list matching the real schedule (24 matches)
+
 const GROUP_MATCHES = [];
 BANGS.forEach(b=>{
   const pairs = groupPairs(b);
-  const slotForBang = (b==='A'||b==='B') ? [0,2] : [1,3]; // A/B share lượt1&2 slots 0&2 ; C/D use 1&3
-  // first 3 pairs -> first slot for this bang's lượt1 ; last 3 pairs -> second slot lượt2
+  const slotForBang = (b==='A'||b==='B') ? [0,2] : [1,3];
   const sanBase = {A:1,B:4,C:1,D:4}[b];
   pairs.forEach((pair, idx)=>{
-    const lap = idx < 3 ? 0 : 1; // lượt 1 or lượt 2
+    const lap = idx < 3 ? 0 : 1;
     const slotIndex = slotForBang[lap];
     const slot = GROUP_TIME_SLOTS[slotIndex];
     const san = sanBase + (idx % 3);
@@ -936,7 +942,6 @@ function computeGroupStandings(b){
   });
   const arr = Object.values(rows);
   arr.forEach(r=>{ r.gd = r.gf - r.ga; r.cardPts = r.yellow*1 + r.red*3; });
-  // Theo Điều lệ mục 6: Điểm > Hiệu số (a) > Tổng bàn thắng (b) > Thẻ phạt, ít hơn xếp trên (c)
   arr.sort((a,c)=> c.pts-a.pts || c.gd-a.gd || c.gf-a.gf || a.cardPts-c.cardPts || a.id.localeCompare(c.id));
   return arr;
 }
@@ -972,7 +977,7 @@ function getMatchOutcome(matchId){
   const s1 = Number(md.score1), s2=Number(md.score2);
   if(s1===s2){
     if(m.round==='group') return {winner:null, loser:null, draw:true};
-    if(!md.penaltyWinner) return null; // knockout tie needs penalty resolution
+    if(!md.penaltyWinner) return null;
     const winner = md.penaltyWinner;
     const loser = winner===t1 ? t2 : t1;
     return {winner, loser, draw:false, penalty:true};
@@ -982,12 +987,11 @@ function getMatchOutcome(matchId){
   return {winner, loser, draw:false};
 }
 function matchIsKnockout(matchId){ return MATCH_BY_ID[matchId].round!=='group'; }
-function matchReady(matchId){ // both teams known
+function matchReady(matchId){
   const {t1,t2} = getMatchTeams(matchId);
   return !!(t1 && t2);
 }
 
-/* Aggregate stats across ALL played matches (group + knockout) */
 function computeAllTeamStats(){
   const stats = {};
   Object.keys(state.teams).forEach(id=> stats[id] = {id, name:teamName(id), mp:0,w:0,d:0,l:0,gf:0,ga:0,yellow:0,red:0});
@@ -1019,7 +1023,7 @@ function computeAllTeamStats(){
 }
 
 function computeTopScorers(){
-  const map = {}; // key team|player
+  const map = {};
   ALL_MATCHES.forEach(m=>{
     const md = state.matches[m.id];
     if(!md || !md.goals) return;
@@ -1048,7 +1052,6 @@ function renderHome(){
   let totalCards = 0;
   ALL_MATCHES.forEach(m=>{ const md=state.matches[m.id]; if(md && md.cards) totalCards += md.cards.length; });
 
-  // Champion banner
   const ckOutcome = hasResult('CK') ? getMatchOutcome('CK') : null;
   const hang3Outcome = hasResult('HANG3') ? getMatchOutcome('HANG3') : null;
   if(ckOutcome && ckOutcome.winner){
@@ -1233,7 +1236,7 @@ function renderTeams(){
           <div class="bang-label">${id}</div>
           <input type="text" data-team="${id}" data-field="name" value="${t.name.replace(/"/g,'&quot;')}">
           <textarea data-team="${id}" data-field="players" placeholder="7 - Nguyễn Văn A&#10;10 - Trần Thị B&#10;...">${(t.players||[]).join('\n')}</textarea>
-          <div class="cnt">${(t.players||[]).length} / 12 cầu thủ${(t.players||[]).length>12?' — vượt quá quy định!':''}</div>
+          <div class="cnt">${(t.players\vert{}\vert{}[]).length} / 12 cầu thủ${(t.players||[]).length>12?' — vượt quá quy định!':''}</div>
         </div>`;
       }).join('')}
     </div>
@@ -1544,7 +1547,7 @@ function renderCommsModalBody(){
     <div class="comment-thread">
       <label style="display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;font-weight:600;">Feedback / Góp ý (${(d.comments||[]).length})</label>
       <div id="commentList">${(d.comments||[]).map(c=>`
-        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author||'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
+        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author\vert{}\vert{}'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
       `).join('') || '<div class="empty-note">Chưa có góp ý nào.</div>'}</div>
       <div class="comment-add">
         <input type="text" id="cm-comment-author" placeholder="Tên bạn" style="max-width:120px;">
@@ -1611,7 +1614,7 @@ document.getElementById('commsDeleteBtn').addEventListener('click', async ()=>{
   showToast('Đã xóa nội dung truyền thông');
 });
 
-/* ============================== EVENT WIRING ============================== */
+/* ============================== EVENT WIRING & EXCEL PARSER ============================== */
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -1634,18 +1637,17 @@ document.getElementById('teamsWrap').addEventListener('change', async (e)=>{
   if(!id) return;
   const val = e.target.value;
   await commitChange(s=>{
-    if(field==='name'){ s.teams[id].name = val.trim() || defaultTeamName(id); }
-    if(field==='players'){ s.teams[id].players = val.split('\n').map(x=>x.trim()).filter(Boolean); }
+    if(field==='name'){ s.teams[id].name = val.replace(/[\u200B-\u200D\uFEFF]/g, '').trim() || defaultTeamName(id); }
+    if(field==='players'){ s.teams[id].players = val.split('\n').map(x=>x.replace(/[\u200B-\u200D\uFEFF]/g, '').trim()).filter(Boolean); }
   });
 });
 
-document.getElementById('importExcelBtn').addEventListener('click', ()=> document.getElementById('importExcelFile').click());
-document.getElementById('importExcelFile').addEventListener('change', (e)=>{
-  const file = e.target.files[0]; if(!file) return;
+// Hàm xử lý đọc file Excel theo format chuẩn của mau-nhap-doi-thi-dau.xlsx
+async function parseAndImportExcelFile(file){
+  if(typeof XLSX === 'undefined'){ alert('Không tải được thư viện đọc Excel. Vui lòng kiểm tra kết nối mạng và thử lại.'); return; }
   const reader = new FileReader();
   reader.onload = async (ev)=>{
     try{
-      if(typeof XLSX === 'undefined'){ alert('Không tải được thư viện đọc Excel. Vui lòng kiểm tra kết nối mạng và thử lại.'); return; }
       const data = new Uint8Array(ev.target.result);
       const wb = XLSX.read(data, {type:'array'});
       const sheetName = wb.SheetNames.includes('Cầu thủ') ? 'Cầu thủ' : wb.SheetNames[wb.SheetNames.length>1?1:0];
@@ -1653,24 +1655,30 @@ document.getElementById('importExcelFile').addEventListener('change', (e)=>{
       const validCode = /^[A-D][1-6]$/;
       const parsed = {}; // code -> {name, players:[]}
       const skipped = [];
+
       rows.forEach((row, idx)=>{
         if(idx===0) return; // header row
-        const rawCode = String(row[0]||'').trim().toUpperCase();
-        if(!rawCode) return; // blank/note rows
+        const rawCode = String(row[0]||'').replace(/[\u200B-\u200D\uFEFF]/g, '').trim().toUpperCase();
+        if(!rawCode) return;
         if(!validCode.test(rawCode)){ skipped.push('Dòng '+(idx+1)+': mã đội "'+rawCode+'" không hợp lệ'); return; }
-        const tenDoi = String(row[1]||'').trim();
-        const soAo = row[2]!==undefined && row[2]!=='' ? String(row[2]).trim() : '';
-        const tenCauThu = String(row[3]||'').trim();
+        
+        // Loại bỏ ký tự ẩn Zero-Width Space \u200b nếu có trong tên đội
+        const tenDoi = String(row[1]||'').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+        const soAo = row[2]!==undefined && row[2]!=='' ? String(row[2]).replace(/[\u200B-\u200D\uFEFF]/g, '').trim() : '';
+        const tenCauThu = String(row[3]||'').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+
         if(!parsed[rawCode]) parsed[rawCode] = {name:'', players:[]};
         if(tenDoi) parsed[rawCode].name = tenDoi;
         if(tenCauThu) parsed[rawCode].players.push(soAo ? (soAo+' - '+tenCauThu) : tenCauThu);
       });
+
       const codes = Object.keys(parsed);
-      if(!codes.length){ alert('Không tìm thấy dữ liệu hợp lệ trong file. Kiểm tra lại định dạng theo file mẫu.'); return; }
+      if(!codes.length){ alert('Không tìm thấy dữ liệu hợp lệ trong file Excel. Kiểm tra lại định dạng theo file mẫu.'); return; }
       const totalPlayers = codes.reduce((sum,c)=>sum+parsed[c].players.length,0);
       let msg = 'Sẽ cập nhật '+codes.length+' đội, tổng '+totalPlayers+' cầu thủ (ghi đè tên/danh sách cầu thủ hiện có của các đội này cho MỌI NGƯỜI đang dùng chung). Tiếp tục?';
       if(skipped.length) msg += '\n\n'+skipped.length+' dòng bị bỏ qua do mã đội không hợp lệ:\n'+skipped.slice(0,8).join('\n')+(skipped.length>8?'\n...':'');
       if(!confirm(msg)) return;
+
       await commitChange(s=>{
         codes.forEach(code=>{
           if(!s.teams[code]) return;
@@ -1684,6 +1692,12 @@ document.getElementById('importExcelFile').addEventListener('change', (e)=>{
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+document.getElementById('importExcelBtn').addEventListener('click', ()=> document.getElementById('importExcelFile').click());
+document.getElementById('importExcelFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  parseAndImportExcelFile(file);
   e.target.value = '';
 });
 
@@ -1694,22 +1708,30 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
   a.href = url; a.download = 'giai-noi-bo-du-lieu.json'; a.click();
   URL.revokeObjectURL(url);
 });
+
 document.getElementById('importBtnTrigger').addEventListener('click', ()=> document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change', (e)=>{
   const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = async (ev)=>{
-    try{
-      const parsed = JSON.parse(ev.target.result);
-      if(!parsed.teams || !parsed.matches) throw new Error('invalid');
-      if(!confirm('Nhập file này sẽ GHI ĐÈ toàn bộ dữ liệu đang dùng chung cho mọi người. Tiếp tục?')) return;
-      mergeIntoState(parsed);
-      await persistState();
-      renderAll();
-      alert('Đã nhập dữ liệu thành công.');
-    }catch(err){ alert('File không hợp lệ.'); }
-  };
-  reader.readAsText(file);
+  const fileName = file.name.toLowerCase();
+
+  // Nâng cấp: Cho phép đọc cả file .xlsx / .xls và file .json từ nút "Nhập dữ liệu"
+  if(fileName.endsWith('.xlsx') || fileName.endsWith('.xls')){
+    parseAndImportExcelFile(file);
+  } else {
+    const reader = new FileReader();
+    reader.onload = async (ev)=>{
+      try{
+        const parsed = JSON.parse(ev.target.result);
+        if(!parsed.teams || !parsed.matches) throw new Error('invalid');
+        if(!confirm('Nhập file này sẽ GHI ĐÈ toàn bộ dữ liệu đang dùng chung cho mọi người. Tiếp tục?')) return;
+        mergeIntoState(parsed);
+        await persistState();
+        renderAll();
+        alert('Đã nhập dữ liệu thành công.');
+      }catch(err){ alert('File không hợp lệ.'); }
+    };
+    reader.readAsText(file);
+  }
   e.target.value = '';
 });
 
@@ -1726,7 +1748,7 @@ async function initApp(){
   updateSyncIndicator();
   const remote = await fetchRemoteState();
   if(remote) mergeIntoState(remote);
-  else await persistState(); // first user ever to open this — seed the shared store
+  else await persistState();
   lastSyncTime = Date.now();
   renderAll();
   updateSyncIndicator();
