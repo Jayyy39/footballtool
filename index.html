@@ -392,7 +392,7 @@
         <tr><td>Tổng quan</td><td>Xem nhanh: tiến độ giải (bao nhiêu/32 trận), đội dẫn đầu mỗi bảng, vua phá lưới tạm thời, trận sắp tới & kết quả gần đây, banner vô địch khi có kết quả chung kết. Chỉ để <b>xem</b>, không nhập liệu tại đây.</td></tr>
         <tr><td>Vòng bảng</td><td>Chọn bảng A/B/C/D → xem lịch 6 trận/bảng → bấm <b>"Nhập KQ"</b> để nhập tỉ số, cầu thủ ghi bàn, thẻ phạt. Bảng xếp hạng bên cạnh tự tính lại ngay sau khi lưu.</td></tr>
         <tr><td>Vòng loại trực tiếp</td><td>Sau khi 1 bảng đấu xong 6 trận, Nhất/Nhì bảng đó <b>tự động</b> được đưa vào Tứ kết — không cần nhập tay tên đội. Bấm vào từng trận để nhập kết quả, đội thắng tự tiến vào Bán kết → Chung kết; đội thua Bán kết tự vào Tranh hạng 3.</td></tr>
-        <tr><td>Thống kê</td><td>Tự tính từ toàn bộ kết quả đã nhập ở Vòng bảng + Vòng loại trực tiếp: vua phá lưới, đội fair-play, tổng hợp bàn thắng/thua/thẻ theo từng đội. Không có gì để nhập tay ở đây.</td></tr>
+        <tr><td>Thống kê</td><td>Tự tính từ toàn bộ kết quả đã nhập ở Vòng bảng + Vòng loại trực tiếp: vua phá lưới, đội fair-play, tổng hợp bàn thắng/thua/thẻ/điểm số theo từng đội. Không có gì để nhập tay ở đây.</td></tr>
         <tr><td>Đội thi đấu</td><td>Đổi tên 24 đội và nhập danh sách cầu thủ (nên theo định dạng "Số áo - Tên"). Danh sách này sẽ hiện ra để <b>chọn</b> khi ghi bàn thắng/thẻ phạt ở tab Vòng bảng và Vòng loại trực tiếp. Có thể nhập nhanh bằng nút <b>"📥 Nhập từ Excel"</b> thay vì gõ tay từng ô — dùng file mẫu đi kèm.</td></tr>
         <tr><td>Truyền thông</td><td>Kênh riêng cho công tác truyền thông giải đấu — không liên quan tới kết quả bóng đá. Thêm nội dung đã thống nhất, cập nhật trạng thái đăng tải, ghi nhận feedback/góp ý.</td></tr>
         <tr><td>Thể lệ</td><td>Nội dung điều lệ chính thức của giải, chỉ để tra cứu — không chỉnh sửa được trong tool.</td></tr>
@@ -994,7 +994,7 @@ function matchReady(matchId){
 
 function computeAllTeamStats(){
   const stats = {};
-  Object.keys(state.teams).forEach(id=> stats[id] = {id, name:teamName(id), mp:0,w:0,d:0,l:0,gf:0,ga:0,yellow:0,red:0});
+  Object.keys(state.teams).forEach(id=> stats[id] = {id, name:teamName(id), mp:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,yellow:0,red:0});
   ALL_MATCHES.forEach(m=>{
     if(!hasResult(m.id)) return;
     const {t1,t2} = getMatchTeams(m.id);
@@ -1005,9 +1005,18 @@ function computeAllTeamStats(){
     stats[t1].mp++; stats[t2].mp++;
     stats[t1].gf+=s1; stats[t1].ga+=s2;
     stats[t2].gf+=s2; stats[t2].ga+=s1;
-    if(s1>s2){stats[t1].w++; stats[t2].l++;}
-    else if(s2>s1){stats[t2].w++; stats[t1].l++;}
-    else if(m.round==='group'){ stats[t1].d++; stats[t2].d++; }
+    if(s1>s2){
+      stats[t1].w++; stats[t1].pts+=3;
+      stats[t2].l++;
+    }
+    else if(s2>s1){
+      stats[t2].w++; stats[t2].pts+=3;
+      stats[t1].l++;
+    }
+    else if(m.round==='group'){
+      stats[t1].d++; stats[t1].pts+=1;
+      stats[t2].d++; stats[t2].pts+=1;
+    }
     else {
       const out = getMatchOutcome(m.id);
       if(out && out.winner){ stats[out.winner].w++; stats[out.loser].l++; }
@@ -1156,7 +1165,7 @@ function renderGroupView(){
           <td>${r.name}</td>
           <td class="num">${r.mp}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td>
           <td class="num">${r.gf}</td><td class="num">${r.ga}</td><td class="num">${r.gd>0?'+':''}${r.gd}</td>
-          <td class="num">${r.yellow}V ${r.red}Đ</td>
+          <td class="num">${r.yellow}V${r.red}Đ</td>
           <td class="num" style="font-weight:700;">${r.pts}</td>
         </tr>`).join('')}
       </tbody>
@@ -1169,7 +1178,6 @@ function renderGroupView(){
 function bmatchHtml(matchId){
   const m = MATCH_BY_ID[matchId];
   const {t1,t2} = getMatchTeams(matchId);
-  const md = state.matches[matchId];
   const done = hasResult(matchId);
   const ready = !!(t1 && t2);
   const out = done ? getMatchOutcome(matchId) : null;
@@ -1216,11 +1224,11 @@ function renderStats(){
     <li><div class="medal">${i+1}</div><div class="name">${s.name}<div class="sub">${s.mp} trận · ${s.yellow} thẻ vàng · ${s.red} thẻ đỏ</div></div><div class="amount">${s.fp}đ phạt</div></li>
   `).join('') : '<div class="empty-note">Chưa có đội nào thi đấu.</div>';
 
-  const totals = computeAllTeamStats().sort((a,b)=> b.mp-a.mp || b.gf-a.gf);
+  const totals = computeAllTeamStats().sort((a,b)=> b.pts-a.pts || b.gd-a.gd || b.gf-a.gf || b.mp-a.mp);
   document.getElementById('teamTotals').innerHTML = `
     <table>
-      <thead><tr><th>Đội</th><th class="num">Trận</th><th class="num">T</th><th class="num">H</th><th class="num">B</th><th class="num">BT</th><th class="num">BB</th><th class="num">HS</th><th class="num">Vàng</th><th class="num">Đỏ</th></tr></thead>
-      <tbody>${totals.map(r=>`<tr><td>${r.name}</td><td class="num">${r.mp}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td><td class="num">${r.gf}</td><td class="num">${r.ga}</td><td class="num">${r.gd>0?'+':''}${r.gd}</td><td class="num">${r.yellow}</td><td class="num">${r.red}</td></tr>`).join('')}</tbody>
+      <thead><tr><th>Đội</th><th class="num">Trận</th><th class="num">T</th><th class="num">H</th><th class="num">B</th><th class="num">BT</th><th class="num">BB</th><th class="num">HS</th><th class="num">Vàng</th><th class="num">Đỏ</th><th class="num" style="background:var(--pitch);">Điểm</th></tr></thead>
+      <tbody>${totals.map(r=>`<tr><td>${r.name}</td><td class="num">${r.mp}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td><td class="num">${r.gf}</td><td class="num">${r.ga}</td><td class="num" style="font-weight:600;">${r.gd>0?'+':''}${r.gd}</td><td class="num">${r.yellow}</td><td class="num">${r.red}</td><td class="num" style="font-weight:700;color:var(--pitch-dark);">${r.pts}</td></tr>`).join('')}</tbody>
     </table>
   `;
 }
@@ -1232,11 +1240,12 @@ function renderTeams(){
     <div class="team-grid">
       ${[1,2,3,4,5,6].map(i=>{
         const id=b+i; const t = state.teams[id];
+        const playerList = t.players || [];
         return `<div class="team-card">
           <div class="bang-label">${id}</div>
           <input type="text" data-team="${id}" data-field="name" value="${t.name.replace(/"/g,'&quot;')}">
-          <textarea data-team="${id}" data-field="players" placeholder="7 - Nguyễn Văn A&#10;10 - Trần Thị B&#10;...">${(t.players||[]).join('\n')}</textarea>
-          <div class="cnt">${(t.players\vert{}\vert{}[]).length} / 12 cầu thủ${(t.players||[]).length>12?' — vượt quá quy định!':''}</div>
+          <textarea data-team="${id}" data-field="players" placeholder="7 - Nguyễn Văn A&#10;10 - Trần Thị B&#10;...">${playerList.join('\n')}</textarea>
+          <div class="cnt">${playerList.length} / 12 cầu thủ${playerList.length>12?' — vượt quá quy định!':''}</div>
         </div>`;
       }).join('')}
     </div>
@@ -1363,7 +1372,6 @@ function togglePenaltyBox(){
 }
 
 function syncDraftFromDOM(){
-  const {t1,t2} = getMatchTeams(modalMatchId);
   modalDraft.score1 = document.getElementById('scoreInput1').value;
   modalDraft.score2 = document.getElementById('scoreInput2').value;
   document.querySelectorAll('#goalsWrap [data-kind="goal"]').forEach((row,idx)=>{
@@ -1547,7 +1555,7 @@ function renderCommsModalBody(){
     <div class="comment-thread">
       <label style="display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;font-weight:600;">Feedback / Góp ý (${(d.comments||[]).length})</label>
       <div id="commentList">${(d.comments||[]).map(c=>`
-        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author\vert{}\vert{}'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
+        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author \vert{}\vert{} 'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
       `).join('') || '<div class="empty-note">Chưa có góp ý nào.</div>'}</div>
       <div class="comment-add">
         <input type="text" id="cm-comment-author" placeholder="Tên bạn" style="max-width:120px;">
@@ -1642,7 +1650,6 @@ document.getElementById('teamsWrap').addEventListener('change', async (e)=>{
   });
 });
 
-// Hàm xử lý đọc file Excel theo format chuẩn của mau-nhap-doi-thi-dau.xlsx
 async function parseAndImportExcelFile(file){
   if(typeof XLSX === 'undefined'){ alert('Không tải được thư viện đọc Excel. Vui lòng kiểm tra kết nối mạng và thử lại.'); return; }
   const reader = new FileReader();
@@ -1653,16 +1660,15 @@ async function parseAndImportExcelFile(file){
       const sheetName = wb.SheetNames.includes('Cầu thủ') ? 'Cầu thủ' : wb.SheetNames[wb.SheetNames.length>1?1:0];
       const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1, defval:''});
       const validCode = /^[A-D][1-6]$/;
-      const parsed = {}; // code -> {name, players:[]}
+      const parsed = {};
       const skipped = [];
 
       rows.forEach((row, idx)=>{
-        if(idx===0) return; // header row
+        if(idx===0) return;
         const rawCode = String(row[0]||'').replace(/[\u200B-\u200D\uFEFF]/g, '').trim().toUpperCase();
         if(!rawCode) return;
         if(!validCode.test(rawCode)){ skipped.push('Dòng '+(idx+1)+': mã đội "'+rawCode+'" không hợp lệ'); return; }
         
-        // Loại bỏ ký tự ẩn Zero-Width Space \u200b nếu có trong tên đội
         const tenDoi = String(row[1]||'').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
         const soAo = row[2]!==undefined && row[2]!=='' ? String(row[2]).replace(/[\u200B-\u200D\uFEFF]/g, '').trim() : '';
         const tenCauThu = String(row[3]||'').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
@@ -1714,7 +1720,6 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
   const file = e.target.files[0]; if(!file) return;
   const fileName = file.name.toLowerCase();
 
-  // Nâng cấp: Cho phép đọc cả file .xlsx / .xls và file .json từ nút "Nhập dữ liệu"
   if(fileName.endsWith('.xlsx') || fileName.endsWith('.xls')){
     parseAndImportExcelFile(file);
   } else {
