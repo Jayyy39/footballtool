@@ -6,498 +6,755 @@
 <title>Giải Bóng Đá Nội Bộ — Sổ Tay Trọng Tài</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Source+Sans+3:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root{
-    --paper:#F1F2EB;
-    --paper-line:#DCDFD3;
-    --pitch:#1C4A34;
-    --pitch-dark:#123326;
-    --pitch-light:#2E6B4E;
-    --ink:#182420;
-    --ink-soft:#5B6660;
-    --gold:#C99A2E;
-    --gold-soft:#F1E3C0;
-    --yellow-card:#E8B923;
-    --red-card:#B93B33;
-    --white:#FDFDFA;
-    --radius-sm:3px;
-    --radius-md:6px;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--paper);
-    color:var(--ink);
-    font-family:'Source Sans 3', sans-serif;
-    font-size:15px;
-    line-height:1.5;
-    background-image:
-      linear-gradient(var(--paper-line) 1px, transparent 1px);
-    background-size: 100% 44px;
-    background-attachment:local;
-  }
-  h1,h2,h3,h4{
-    font-family:'Oswald', sans-serif;
-    font-weight:600;
-    margin:0 0 4px 0;
-    letter-spacing:0.2px;
-    color:var(--pitch-dark);
-  }
-  a{color:inherit;}
-  button{font-family:inherit;cursor:pointer;}
-  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;}
+  :root{
+    --paper:#F1F2EB;
+    --paper-line:#DCDFD3;
+    --pitch:#1C4A34;
+    --pitch-dark:#123326;
+    --pitch-light:#2E6B4E;
+    --ink:#182420;
+    --ink-soft:#5B6660;
+    --gold:#C99A2E;
+    --gold-soft:#F1E3C0;
+    --yellow-card:#E8B923;
+    --red-card:#B93B33;
+    --white:#FDFDFA;
+    --radius-sm:3px;
+    --radius-md:6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Source Sans 3', sans-serif;
+    font-size:15px;
+    line-height:1.5;
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 44px;
+    background-attachment:local;
+  }
+  h1,h2,h3,h4{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    margin:0 0 4px 0;
+    letter-spacing:0.2px;
+    color:var(--pitch-dark);
+  }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 20px 80px;}
 
-  /* Header */
-  .site-header{
-    background:var(--pitch);
-    background-image: linear-gradient(180deg, var(--pitch) 0%, var(--pitch-dark) 100%);
-    color:var(--white);
-    padding:26px 20px 0;
-    border-bottom:4px solid var(--gold);
-  }
-  .site-header .inner{max-width:1180px;margin:0 auto;}
-  .site-header .eyebrow{
-    font-size:12.5px;
-    color:var(--gold-soft);
-    opacity:0.85;
-    margin-bottom:6px;
-  }
-  .site-header h1{color:var(--white);font-size:30px;margin-bottom:2px;}
-  .site-header .sub{color:#CFE2D6;font-size:14px;margin-bottom:20px;}
-  .tabs{display:flex;gap:2px;flex-wrap:wrap;}
-  .tab-btn{
-    background:transparent;
-    border:none;
-    color:#CFE2D6;
-    padding:11px 18px;
-    font-size:14.5px;
-    font-weight:500;
-    border-bottom:3px solid transparent;
-    transition:all .15s ease;
-  }
-  .tab-btn:hover{color:var(--white);}
-  .tab-btn.active{
-    color:var(--white);
-    border-bottom:3px solid var(--gold);
-    background:rgba(255,255,255,0.06);
-  }
+  /* Header */
+  .site-header{
+    background:var(--pitch);
+    background-image: linear-gradient(180deg, var(--pitch) 0%, var(--pitch-dark) 100%);
+    color:var(--white);
+    padding:26px 20px 0;
+    border-bottom:4px solid var(--gold);
+  }
+  .site-header .inner{max-width:1180px;margin:0 auto;}
+  .site-header .eyebrow{
+    font-size:12.5px;
+    color:var(--gold-soft);
+    opacity:0.85;
+    margin-bottom:6px;
+  }
+  .site-header h1{color:var(--white);font-size:30px;margin-bottom:2px;}
+  .site-header .sub{color:#CFE2D6;font-size:14px;margin-bottom:20px;}
+  .tabs{display:flex;gap:2px;flex-wrap:wrap;}
+  .tab-btn{
+    background:transparent;
+    border:none;
+    color:#CFE2D6;
+    padding:11px 18px;
+    font-size:14.5px;
+    font-weight:500;
+    border-bottom:3px solid transparent;
+    transition:all .15s ease;
+  }
+  .tab-btn:hover{color:var(--white);}
+  .tab-btn.active{
+    color:var(--white);
+    border-bottom:3px solid var(--gold);
+    background:rgba(255,255,255,0.06);
+  }
 
-  .view{display:none;padding-top:26px;}
-  .view.active{display:block;}
+  .view{display:none;padding-top:26px;}
+  .view.active{display:block;}
 
-  /* Section header */
-  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
-  .section-head h2{font-size:22px;}
-  .section-head .note{color:var(--ink-soft);font-size:13.5px;}
+  /* Section header */
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;}
+  .section-head h2{font-size:22px;}
+  .section-head .note{color:var(--ink-soft);font-size:13.5px;}
 
-  /* Overview cards */
-  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
-  .stat-card{
-    background:var(--white);
-    border:1px solid var(--paper-line);
-    border-left:4px solid var(--pitch);
-    padding:16px 18px;
-  }
-  .stat-card .num{font-family:'Oswald',sans-serif;font-size:32px;color:var(--pitch-dark);line-height:1;}
-  .stat-card .lbl{color:var(--ink-soft);font-size:13px;margin-top:6px;}
+  /* Overview cards */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+  .stat-card{
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-left:4px solid var(--pitch);
+    padding:16px 18px;
+  }
+  .stat-card .num{font-family:'Oswald',sans-serif;font-size:32px;color:var(--pitch-dark);line-height:1;}
+  .stat-card .lbl{color:var(--ink-soft);font-size:13px;margin-top:6px;}
 
-  .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start;}
-  @media (max-width:900px){.two-col{grid-template-columns:1fr;} .stat-grid{grid-template-columns:repeat(2,1fr);}}
+  .two-col{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start;}
+  @media (max-width:900px){.two-col{grid-template-columns:1fr;} .stat-grid{grid-template-columns:repeat(2,1fr);}}
 
-  .panel{background:var(--white);border:1px solid var(--paper-line);margin-bottom:20px;}
-  .panel-head{
-    background:var(--pitch);
-    color:var(--white);
-    padding:10px 16px;
-    font-family:'Oswald',sans-serif;
-    font-size:15px;
-    letter-spacing:0.3px;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .panel-body{padding:14px 16px;}
+  .panel{background:var(--white);border:1px solid var(--paper-line);margin-bottom:20px;}
+  .panel-head{
+    background:var(--pitch);
+    color:var(--white);
+    padding:10px 16px;
+    font-family:'Oswald',sans-serif;
+    font-size:15px;
+    letter-spacing:0.3px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .panel-body{padding:14px 16px;}
 
-  /* Match rows */
-  .match-row{
-    display:grid;
-    grid-template-columns:70px 1fr auto 1fr 90px;
-    align-items:center;
-    gap:10px;
-    padding:10px 4px;
-    border-bottom:1px solid var(--paper-line);
-    font-size:14px;
-  }
-  .match-row:last-child{border-bottom:none;}
-  .match-row .when{color:var(--ink-soft);font-size:12.5px;}
-  .match-row .team{font-weight:600;text-align:right;}
-  .match-row .team.left{text-align:left;}
-  .match-row .score{
-    font-family:'Oswald',sans-serif;
-    font-size:17px;
-    background:var(--paper);
-    border:1px solid var(--paper-line);
-    padding:3px 10px;
-    min-width:56px;
-    text-align:center;
-    border-radius:var(--radius-sm);
-  }
-  .match-row .score.empty{color:var(--ink-soft);font-size:13px;font-family:'Source Sans 3',sans-serif;}
-  .match-row .edit-btn{
-    background:var(--pitch);
-    color:var(--white);
-    border:none;
-    padding:6px 12px;
-    font-size:12.5px;
-    border-radius:var(--radius-sm);
-    justify-self:end;
-  }
-  .match-row .edit-btn:hover{background:var(--pitch-dark);}
-  .match-row .edit-btn.done{background:var(--white);color:var(--pitch);border:1px solid var(--pitch);}
-  .match-row .edit-btn.locked{background:var(--paper);color:var(--ink-soft);border:1px solid var(--paper-line);cursor:not-allowed;}
+  /* Match rows */
+  .match-row{
+    display:grid;
+    grid-template-columns:70px 1fr auto 1fr 90px;
+    align-items:center;
+    gap:10px;
+    padding:10px 4px;
+    border-bottom:1px solid var(--paper-line);
+    font-size:14px;
+  }
+  .match-row:last-child{border-bottom:none;}
+  .match-row .when{color:var(--ink-soft);font-size:12.5px;}
+  .match-row .team{font-weight:600;text-align:right;}
+  .match-row .team.left{text-align:left;}
+  .match-row .score{
+    font-family:'Oswald',sans-serif;
+    font-size:17px;
+    background:var(--paper);
+    border:1px solid var(--paper-line);
+    padding:3px 10px;
+    min-width:56px;
+    text-align:center;
+    border-radius:var(--radius-sm);
+  }
+  .match-row .score.empty{color:var(--ink-soft);font-size:13px;font-family:'Source Sans 3',sans-serif;}
+  .match-row .edit-btn{
+    background:var(--pitch);
+    color:var(--white);
+    border:none;
+    padding:6px 12px;
+    font-size:12.5px;
+    border-radius:var(--radius-sm);
+    justify-self:end;
+  }
+  .match-row .edit-btn:hover{background:var(--pitch-dark);}
+  .match-row .edit-btn.done{background:var(--white);color:var(--pitch);border:1px solid var(--pitch);}
+  .match-row .edit-btn.locked{background:var(--paper);color:var(--ink-soft);border:1px solid var(--paper-line);cursor:not-allowed;}
 
-  /* Standings table */
-  table{width:100%;border-collapse:collapse;font-size:13.8px;}
-  th{
-    text-align:left;
-    font-weight:600;
-    color:var(--white);
-    background:var(--pitch-light);
-    padding:7px 8px;
-    font-size:12.5px;
-  }
-  td{padding:7px 8px;border-bottom:1px solid var(--paper-line);}
-  tr.top2 td{background:var(--gold-soft);}
-  td.num,th.num{text-align:center;}
-  .rank{
-    display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;
-    background:var(--pitch);color:var(--white);font-size:11px;border-radius:50%;
-  }
-  tr.top2 .rank{background:var(--gold);}
+  /* Standings table */
+  table{width:100%;border-collapse:collapse;font-size:13.8px;}
+  th{
+    text-align:left;
+    font-weight:600;
+    color:var(--white);
+    background:var(--pitch-light);
+    padding:7px 8px;
+    font-size:12.5px;
+  }
+  td{padding:7px 8px;border-bottom:1px solid var(--paper-line);}
+  tr.top2 td{background:var(--gold-soft);}
+  td.num,th.num{text-align:center;}
+  .rank{
+    display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;
+    background:var(--pitch);color:var(--white);font-size:11px;border-radius:50%;
+  }
+  tr.top2 .rank{background:var(--gold);}
 
-  .group-tabs{display:flex;gap:6px;margin-bottom:14px;}
-  .group-tabs button{
-    background:var(--white);border:1px solid var(--paper-line);
-    padding:8px 20px;font-family:'Oswald',sans-serif;font-size:14px;color:var(--ink);
-  }
-  .group-tabs button.active{background:var(--pitch);color:var(--white);border-color:var(--pitch);}
+  .group-tabs{display:flex;gap:6px;margin-bottom:14px;}
+  .group-tabs button{
+    background:var(--white);border:1px solid var(--paper-line);
+    padding:8px 20px;font-family:'Oswald',sans-serif;font-size:14px;color:var(--ink);
+  }
+  .group-tabs button.active{background:var(--pitch);color:var(--white);border-color:var(--pitch);}
 
-  /* Bracket */
-  .bracket{display:flex;gap:36px;overflow-x:auto;padding:10px 4px 20px;}
-  .bracket-col{display:flex;flex-direction:column;justify-content:space-around;min-width:210px;gap:16px;}
-  .bracket-col .col-label{font-family:'Oswald',sans-serif;font-size:12.5px;color:var(--ink-soft);text-align:center;margin-bottom:4px;letter-spacing:0.4px;}
-  .bmatch{
-    background:var(--white);border:1px solid var(--paper-line);border-left:3px solid var(--pitch);
-    font-size:13px;
-  }
-  .bmatch .brow{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--paper-line);}
-  .bmatch .brow:last-child{border-bottom:none;}
-  .bmatch .brow.winner{background:var(--gold-soft);font-weight:700;}
-  .bmatch .bname{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .bmatch .bscore{font-family:'Oswald',sans-serif;}
-  .bmatch .edit-link{display:block;text-align:center;font-size:11.5px;padding:5px;color:var(--pitch);background:var(--paper);border-top:1px dashed var(--paper-line);}
-  .bmatch .edit-link:hover{background:var(--gold-soft);}
-  .bmatch.pending{opacity:0.55;}
+  /* Bracket */
+  .bracket{display:flex;gap:36px;overflow-x:auto;padding:10px 4px 20px;}
+  .bracket-col{display:flex;flex-direction:column;justify-content:space-around;min-width:210px;gap:16px;}
+  .bracket-col .col-label{font-family:'Oswald',sans-serif;font-size:12.5px;color:var(--ink-soft);text-align:center;margin-bottom:4px;letter-spacing:0.4px;}
+  .bmatch{
+    background:var(--white);border:1px solid var(--paper-line);border-left:3px solid var(--pitch);
+    font-size:13px;
+  }
+  .bmatch .brow{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid var(--paper-line);}
+  .bmatch .brow:last-child{border-bottom:none;}
+  .bmatch .brow.winner{background:var(--gold-soft);font-weight:700;}
+  .bmatch .bname{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bmatch .bscore{font-family:'Oswald',sans-serif;}
+  .bmatch .edit-link{display:block;text-align:center;font-size:11.5px;padding:5px;color:var(--pitch);background:var(--paper);border-top:1px dashed var(--paper-line);}
+  .bmatch .edit-link:hover{background:var(--gold-soft);}
+  .bmatch.pending{opacity:0.55;}
 
-  .third-place{margin-top:6px;}
+  .third-place{margin-top:6px;}
 
-  /* Teams / settings */
-  .team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
-  @media(max-width:800px){.team-grid{grid-template-columns:1fr;}}
-  .team-card{background:var(--white);border:1px solid var(--paper-line);padding:12px 14px;}
-  .team-card .bang-label{font-size:11.5px;color:var(--gold);font-weight:700;letter-spacing:0.5px;}
-  .team-card input[type=text]{
-    width:100%;font-family:'Oswald',sans-serif;font-size:16px;border:none;border-bottom:2px solid var(--paper-line);
-    padding:4px 2px;margin:4px 0 8px;background:transparent;
-  }
-  .team-card input[type=text]:focus{outline:none;border-bottom-color:var(--pitch);}
-  .team-card textarea{
-    width:100%;min-height:70px;font-family:inherit;font-size:13px;border:1px solid var(--paper-line);
-    padding:6px 8px;resize:vertical;
-  }
-  .team-card .cnt{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+  /* Teams / settings */
+  .team-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  @media(max-width:800px){.team-grid{grid-template-columns:1fr;}}
+  .team-card{background:var(--white);border:1px solid var(--paper-line);padding:12px 14px;}
+  .team-card .bang-label{font-size:11.5px;color:var(--gold);font-weight:700;letter-spacing:0.5px;}
+  .team-card input[type=text]{
+    width:100%;font-family:'Oswald',sans-serif;font-size:16px;border:none;border-bottom:2px solid var(--paper-line);
+    padding:4px 2px;margin:4px 0 8px;background:transparent;
+  }
+  .team-card input[type=text]:focus{outline:none;border-bottom-color:var(--pitch);}
+  .team-card textarea{
+    width:100%;min-height:70px;font-family:inherit;font-size:13px;border:1px solid var(--paper-line);
+    padding:6px 8px;resize:vertical;
+  }
+  .team-card .cnt{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
 
-  /* Stats page */
-  .rank-list{list-style:none;margin:0;padding:0;}
-  .rank-list li{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--paper-line);}
-  .rank-list li:last-child{border-bottom:none;}
-  .rank-list .medal{width:24px;height:24px;border-radius:50%;background:var(--pitch);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;}
-  .rank-list li:nth-child(1) .medal{background:#C99A2E;}
-  .rank-list li:nth-child(2) .medal{background:#8B9A8F;}
-  .rank-list li:nth-child(3) .medal{background:#A5652E;}
-  .rank-list .name{flex:1;font-weight:600;}
-  .rank-list .sub{color:var(--ink-soft);font-size:12.5px;}
-  .rank-list .amount{font-family:'Oswald',sans-serif;font-size:18px;color:var(--pitch-dark);}
+  /* Stats page */
+  .rank-list{list-style:none;margin:0;padding:0;}
+  .rank-list li{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--paper-line);}
+  .rank-list li:last-child{border-bottom:none;}
+  .rank-list .medal{width:24px;height:24px;border-radius:50%;background:var(--pitch);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;font-family:'Oswald',sans-serif;}
+  .rank-list li:nth-child(1) .medal{background:#C99A2E;}
+  .rank-list li:nth-child(2) .medal{background:#8B9A8F;}
+  .rank-list li:nth-child(3) .medal{background:#A5652E;}
+  .rank-list .name{flex:1;font-weight:600;}
+  .rank-list .sub{color:var(--ink-soft);font-size:12.5px;}
+  .rank-list .amount{font-family:'Oswald',sans-serif;font-size:18px;color:var(--pitch-dark);}
 
-  .card-badge{display:inline-flex;align-items:center;gap:3px;font-size:12px;padding:1px 6px;border-radius:var(--radius-sm);}
-  .card-badge.y{background:#FCF0CC;color:#8A6A0A;}
-  .card-badge.r{background:#F6D9D6;color:#8A231C;}
+  .card-badge{display:inline-flex;align-items:center;gap:3px;font-size:12px;padding:1px 6px;border-radius:var(--radius-sm);}
+  .card-badge.y{background:#FCF0CC;color:#8A6A0A;}
+  .card-badge.r{background:#F6D9D6;color:#8A231C;}
 
-  .empty-note{color:var(--ink-soft);font-style:italic;padding:14px 4px;font-size:13.5px;}
+  .empty-note{color:var(--ink-soft);font-style:italic;padding:14px 4px;font-size:13.5px;}
 
-  /* Modal */
-  .modal-overlay{
-    display:none;position:fixed;inset:0;background:rgba(18,32,26,0.55);
-    align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:100;
-  }
-  .modal-overlay.open{display:flex;}
-  .modal{background:var(--white);width:100%;max-width:560px;border-top:5px solid var(--gold);}
-  .modal-head{padding:16px 20px;border-bottom:1px solid var(--paper-line);display:flex;justify-content:space-between;align-items:center;}
-  .modal-head h3{font-size:17px;}
-  .modal-head .close-x{background:none;border:none;font-size:20px;color:var(--ink-soft);line-height:1;}
-  .modal-body{padding:16px 20px;max-height:70vh;overflow-y:auto;}
-  .modal-foot{padding:14px 20px;border-top:1px solid var(--paper-line);display:flex;justify-content:flex-end;gap:10px;}
+  /* Modal */
+  .modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(18,32,26,0.55);
+    align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:100;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--white);width:100%;max-width:560px;border-top:5px solid var(--gold);}
+  .modal-head{padding:16px 20px;border-bottom:1px solid var(--paper-line);display:flex;justify-content:space-between;align-items:center;}
+  .modal-head h3{font-size:17px;}
+  .modal-head .close-x{background:none;border:none;font-size:20px;color:var(--ink-soft);line-height:1;}
+  .modal-body{padding:16px 20px;max-height:70vh;overflow-y:auto;}
+  .modal-foot{padding:14px 20px;border-top:1px solid var(--paper-line);display:flex;justify-content:flex-end;gap:10px;}
 
-  .score-input-row{display:grid;grid-template-columns:1fr 60px auto 60px 1fr;align-items:center;gap:10px;margin-bottom:18px;}
-  .score-input-row .tname{font-weight:700;text-align:center;font-size:14.5px;}
-  .score-input-row input{
-    width:100%;text-align:center;font-family:'Oswald',sans-serif;font-size:22px;
-    border:1px solid var(--paper-line);padding:6px;border-radius:var(--radius-sm);
-  }
-  .score-input-row .dash{font-family:'Oswald',sans-serif;font-size:20px;color:var(--ink-soft);}
+  .score-input-row{display:grid;grid-template-columns:1fr 60px auto 60px 1fr;align-items:center;gap:10px;margin-bottom:18px;}
+  .score-input-row .tname{font-weight:700;text-align:center;font-size:14.5px;}
+  .score-input-row input{
+    width:100%;text-align:center;font-family:'Oswald',sans-serif;font-size:22px;
+    border:1px solid var(--paper-line);padding:6px;border-radius:var(--radius-sm);
+  }
+  .score-input-row .dash{font-family:'Oswald',sans-serif;font-size:20px;color:var(--ink-soft);}
 
-  .subhead{font-family:'Oswald',sans-serif;font-size:14px;margin:16px 0 8px;color:var(--pitch-dark);display:flex;justify-content:space-between;align-items:center;}
-  .subhead .add-btn{background:var(--paper);border:1px solid var(--paper-line);font-size:12px;padding:4px 10px;border-radius:var(--radius-sm);}
-  .entry-row{display:grid;grid-template-columns:90px 1fr 90px 26px;gap:6px;margin-bottom:6px;}
-  .entry-row select, .entry-row input{font-size:13px;padding:5px 6px;border:1px solid var(--paper-line);border-radius:var(--radius-sm);font-family:inherit;}
-  .entry-row .rm{background:none;border:none;color:var(--red-card);font-size:16px;}
-  .penalty-box{background:var(--gold-soft);padding:10px 12px;margin-top:10px;font-size:13.5px;}
-  .penalty-box label{display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;}
+  .subhead{font-family:'Oswald',sans-serif;font-size:14px;margin:16px 0 8px;color:var(--pitch-dark);display:flex;justify-content:space-between;align-items:center;}
+  .subhead .add-btn{background:var(--paper);border:1px solid var(--paper-line);font-size:12px;padding:4px 10px;border-radius:var(--radius-sm);}
+  .entry-row{display:grid;grid-template-columns:90px 1fr 90px 26px;gap:6px;margin-bottom:6px;}
+  .entry-row select, .entry-row input{font-size:13px;padding:5px 6px;border:1px solid var(--paper-line);border-radius:var(--radius-sm);font-family:inherit;}
+  .entry-row .rm{background:none;border:none;color:var(--red-card);font-size:16px;}
+  .penalty-box{background:var(--gold-soft);padding:10px 12px;margin-top:10px;font-size:13.5px;}
+  .penalty-box label{display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;}
 
-  .btn{border:none;padding:9px 20px;font-size:14px;border-radius:var(--radius-sm);font-weight:600;}
-  .btn-primary{background:var(--pitch);color:#fff;}
-  .btn-primary:hover{background:var(--pitch-dark);}
-  .btn-ghost{background:var(--white);color:var(--ink);border:1px solid var(--paper-line);}
-  .btn-ghost:hover{background:var(--paper);}
-  .btn-danger-outline{background:var(--white);color:var(--red-card);border:1px solid var(--red-card);font-size:12.5px;padding:6px 12px;}
+  .btn{border:none;padding:9px 20px;font-size:14px;border-radius:var(--radius-sm);font-weight:600;}
+  .btn-primary{background:var(--pitch);color:#fff;}
+  .btn-primary:hover{background:var(--pitch-dark);}
+  .btn-ghost{background:var(--white);color:var(--ink);border:1px solid var(--paper-line);}
+  .btn-ghost:hover{background:var(--paper);}
+  .btn-danger-outline{background:var(--white);color:var(--red-card);border:1px solid var(--red-card);font-size:12.5px;padding:6px 12px;}
 
-  footer.appfoot{max-width:1180px;margin:0 auto;padding:30px 20px;color:var(--ink-soft);font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  footer.appfoot{max-width:1180px;margin:0 auto;padding:30px 20px;color:var(--ink-soft);font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 
-  /* Champion banner */
-  .champion-banner{
-    background:linear-gradient(135deg, var(--pitch-dark) 0%, var(--pitch) 55%, #2E6B4E 100%);
-    border:1px solid var(--gold);
-    padding:22px 24px;margin-bottom:22px;color:#fff;
-    display:flex;align-items:center;gap:20px;flex-wrap:wrap;
-  }
-  .champion-banner .trophy{font-size:44px;line-height:1;}
-  .champion-banner h3{color:var(--gold);font-size:13px;letter-spacing:0.5px;margin-bottom:4px;}
-  .champion-banner .cname{font-family:'Oswald',sans-serif;font-size:26px;color:#fff;}
-  .champion-banner .podium{display:flex;gap:26px;flex-wrap:wrap;margin-left:auto;}
-  .champion-banner .podium div{font-size:12.5px;color:#CFE2D6;}
-  .champion-banner .podium b{display:block;color:#fff;font-size:15px;font-family:'Oswald',sans-serif;}
+  /* Champion banner */
+  .champion-banner{
+    background:linear-gradient(135deg, var(--pitch-dark) 0%, var(--pitch) 55%, #2E6B4E 100%);
+    border:1px solid var(--gold);
+    padding:22px 24px;margin-bottom:22px;color:#fff;
+    display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  }
+  .champion-banner .trophy{font-size:44px;line-height:1;}
+  .champion-banner h3{color:var(--gold);font-size:13px;letter-spacing:0.5px;margin-bottom:4px;}
+  .champion-banner .cname{font-family:'Oswald',sans-serif;font-size:26px;color:#fff;}
+  .champion-banner .podium{display:flex;gap:26px;flex-wrap:wrap;margin-left:auto;}
+  .champion-banner .podium div{font-size:12.5px;color:#CFE2D6;}
+  .champion-banner .podium b{display:block;color:#fff;font-size:15px;font-family:'Oswald',sans-serif;}
 
-  /* Progress bar */
-  .progress-track{background:var(--paper-line);height:8px;border-radius:5px;overflow:hidden;margin-top:10px;}
-  .progress-fill{background:linear-gradient(90deg, var(--pitch), var(--gold));height:100%;transition:width .5s ease;}
+  /* Progress bar */
+  .progress-track{background:var(--paper-line);height:8px;border-radius:5px;overflow:hidden;margin-top:10px;}
+  .progress-fill{background:linear-gradient(90deg, var(--pitch), var(--gold));height:100%;transition:width .5s ease;}
 
-  .bang-status-tag{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--paper);border:1px solid var(--paper-line);color:var(--ink-soft);}
-  .bang-status-tag.done{background:var(--gold-soft);color:#8A6A0A;border-color:var(--gold);}
+  .bang-status-tag{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--paper);border:1px solid var(--paper-line);color:var(--ink-soft);}
+  .bang-status-tag.done{background:var(--gold-soft);color:#8A6A0A;border-color:var(--gold);}
 
-  /* Toast */
-  #toastWrap{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;}
-  .toast{
-    background:var(--pitch-dark);color:#fff;padding:11px 18px;border-left:4px solid var(--gold);
-    font-size:13.5px;box-shadow:0 4px 14px rgba(0,0,0,0.25);
-    animation:toastIn .25s ease;max-width:320px;
-  }
-  @keyframes toastIn{ from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+  /* Toast */
+  #toastWrap{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+  .toast{
+    background:var(--pitch-dark);color:#fff;padding:11px 18px;border-left:4px solid var(--gold);
+    font-size:13.5px;box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    animation:toastIn .25s ease;max-width:320px;
+  }
+  @keyframes toastIn{ from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 
-  /* Comms tab */
-  .comms-toolbar{display:flex;justify-content:flex-end;margin-bottom:14px;}
-  .comms-list{display:flex;flex-direction:column;gap:10px;}
-  .comms-card{background:var(--white);border:1px solid var(--paper-line);border-left:4px solid var(--pitch);padding:14px 16px;cursor:pointer;transition:border-color .12s;}
-  .comms-card:hover{border-left-color:var(--gold);}
-  .comms-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
-  .comms-card .title{font-family:'Oswald',sans-serif;font-size:16.5px;color:var(--pitch-dark);}
-  .comms-card .meta{color:var(--ink-soft);font-size:12.5px;margin-top:4px;}
-  .comms-card .excerpt{color:var(--ink);font-size:13.5px;margin-top:8px;max-height:38px;overflow:hidden;text-overflow:ellipsis;}
-  .comms-card .foot-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:var(--ink-soft);}
+  /* Comms tab */
+  .comms-toolbar{display:flex;justify-content:flex-end;margin-bottom:14px;}
+  .comms-list{display:flex;flex-direction:column;gap:10px;}
+  .comms-card{background:var(--white);border:1px solid var(--paper-line);border-left:4px solid var(--pitch);padding:14px 16px;cursor:pointer;transition:border-color .12s;}
+  .comms-card:hover{border-left-color:var(--gold);}
+  .comms-card .row1{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .comms-card .title{font-family:'Oswald',sans-serif;font-size:16.5px;color:var(--pitch-dark);}
+  .comms-card .meta{color:var(--ink-soft);font-size:12.5px;margin-top:4px;}
+  .comms-card .excerpt{color:var(--ink);font-size:13.5px;margin-top:8px;max-height:38px;overflow:hidden;text-overflow:ellipsis;}
+  .comms-card .foot-row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;color:var(--ink-soft);}
 
-  .status-badge{font-size:11.5px;padding:3px 10px;border-radius:10px;white-space:nowrap;font-weight:600;}
-  .status-badge.s-draft{background:#E5E7E0;color:#5B6660;}
-  .status-badge.s-review{background:#FCF0CC;color:#8A6A0A;}
-  .status-badge.s-scheduled{background:#DCEBE3;color:#1C4A34;}
-  .status-badge.s-done{background:var(--gold-soft);color:#8A6A0A;border:1px solid var(--gold);}
-  .status-badge.s-fix{background:#F6D9D6;color:#8A231C;}
+  .status-badge{font-size:11.5px;padding:3px 10px;border-radius:10px;white-space:nowrap;font-weight:600;}
+  .status-badge.s-draft{background:#E5E7E0;color:#5B6660;}
+  .status-badge.s-review{background:#FCF0CC;color:#8A6A0A;}
+  .status-badge.s-scheduled{background:#DCEBE3;color:#1C4A34;}
+  .status-badge.s-done{background:var(--gold-soft);color:#8A6A0A;border:1px solid var(--gold);}
+  .status-badge.s-fix{background:#F6D9D6;color:#8A231C;}
 
-  .comms-field{margin-bottom:14px;}
-  .comms-field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:4px;font-weight:600;}
-  .comms-field input[type=text], .comms-field textarea, .comms-field select{
-    width:100%;font-family:inherit;font-size:14px;border:1px solid var(--paper-line);padding:8px 10px;border-radius:var(--radius-sm);
-  }
-  .comms-field textarea{min-height:80px;resize:vertical;}
-  .comms-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .comms-field{margin-bottom:14px;}
+  .comms-field label{display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:4px;font-weight:600;}
+  .comms-field input[type=text], .comms-field textarea, .comms-field select{
+    width:100%;font-family:inherit;font-size:14px;border:1px solid var(--paper-line);padding:8px 10px;border-radius:var(--radius-sm);
+  }
+  .comms-field textarea{min-height:80px;resize:vertical;}
+  .comms-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 
-  .comment-thread{border-top:1px solid var(--paper-line);margin-top:16px;padding-top:12px;}
-  .comment-item{background:var(--paper);padding:9px 12px;margin-bottom:8px;font-size:13.5px;}
-  .comment-item .cauthor{font-weight:700;color:var(--pitch-dark);font-size:12.5px;}
-  .comment-item .ctime{color:var(--ink-soft);font-size:11px;float:right;}
-  .comment-add{display:flex;gap:8px;margin-top:10px;}
-  .comment-add input{flex:1;font-size:13.5px;padding:8px 10px;border:1px solid var(--paper-line);border-radius:var(--radius-sm);}
-  .comment-add button{background:var(--pitch);color:#fff;border:none;padding:0 16px;border-radius:var(--radius-sm);font-size:13px;}
+  .comment-thread{border-top:1px solid var(--paper-line);margin-top:16px;padding-top:12px;}
+  .comment-item{background:var(--paper);padding:9px 12px;margin-bottom:8px;font-size:13.5px;}
+  .comment-item .cauthor{font-weight:700;color:var(--pitch-dark);font-size:12.5px;}
+  .comment-item .ctime{color:var(--ink-soft);font-size:11px;float:right;}
+  .comment-add{display:flex;gap:8px;margin-top:10px;}
+  .comment-add input{flex:1;font-size:13.5px;padding:8px 10px;border:1px solid var(--paper-line);border-radius:var(--radius-sm);}
+  .comment-add button{background:var(--pitch);color:#fff;border:none;padding:0 16px;border-radius:var(--radius-sm);font-size:13px;}
+
+  /* Readme / Thể lệ long-form content */
+  .doc-panel{background:var(--white);border:1px solid var(--paper-line);padding:20px 24px;margin-bottom:16px;}
+  .doc-panel h3{font-size:17px;margin:0 0 10px;color:var(--pitch-dark);border-bottom:2px solid var(--gold);padding-bottom:6px;}
+  .doc-panel h4{font-size:14.5px;margin:14px 0 6px;color:var(--pitch);}
+  .doc-panel p{margin:0 0 8px;font-size:14px;}
+  .doc-panel ul{margin:0 0 8px;padding-left:20px;}
+  .doc-panel ul li{margin-bottom:4px;font-size:14px;}
+  .doc-panel ul ul{margin-top:4px;}
+  .doc-callout{background:var(--gold-soft);border-left:4px solid var(--gold);padding:12px 16px;margin:10px 0;font-size:13.5px;}
+  .doc-callout b{color:#7A5C0C;}
+  .flow-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:10px 0;}
+  .flow-card{background:var(--paper);border:1px solid var(--paper-line);border-top:3px solid var(--pitch);padding:10px 12px;font-size:13px;}
+  .flow-card b{display:block;font-family:'Oswald',sans-serif;color:var(--pitch-dark);font-size:14px;margin-bottom:3px;}
+  .flow-arrow{text-align:center;color:var(--gold);font-size:18px;align-self:center;}
+  .howto-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;}
+  .howto-table th{background:var(--pitch-light);color:#fff;padding:8px 10px;text-align:left;}
+  .howto-table td{padding:9px 10px;border-bottom:1px solid var(--paper-line);vertical-align:top;}
+  .howto-table td:first-child{font-weight:700;color:var(--pitch-dark);white-space:nowrap;}
+  .reg-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px;}
+  .reg-table th, .reg-table td{border:1px solid var(--paper-line);padding:6px 8px;text-align:left;}
+  .reg-table th{background:var(--pitch-light);color:#fff;}
 </style>
 </head>
 <body>
 
 <header class="site-header">
-  <div class="inner">
-    <div class="eyebrow">Sổ tay tổ chức giải &nbsp;·&nbsp; 24 đội &nbsp;·&nbsp; Bóng đá sân 5 &nbsp;·&nbsp; Tài trợ: WFX</div>
-    <h1 id="tournamentTitle">Hội Thao Liên Hub FLM HCM 2026</h1>
-    <div class="sub">4 bảng đấu · vòng tròn tính điểm · tứ kết – bán kết – tranh hạng 3 – chung kết · theo Điều Lệ Giải Bóng Đá</div>
-    <nav class="tabs">
-      <button class="tab-btn active" data-view="home">Tổng quan</button>
-      <button class="tab-btn" data-view="groups">Vòng bảng</button>
-      <button class="tab-btn" data-view="knockout">Vòng loại trực tiếp</button>
-      <button class="tab-btn" data-view="stats">Thống kê</button>
-      <button class="tab-btn" data-view="teams">Đội thi đấu</button>
-      <button class="tab-btn" data-view="comms">Truyền thông</button>
-    </nav>
-  </div>
+  <div class="inner">
+    <div class="eyebrow">Sổ tay tổ chức giải &nbsp;·&nbsp; 24 đội &nbsp;·&nbsp; Bóng đá sân 5 &nbsp;·&nbsp; Tài trợ: WFX</div>
+    <h1 id="tournamentTitle">Hội Thao Liên Hub FLM HCM 2026</h1>
+    <div class="sub">4 bảng đấu · vòng tròn tính điểm · tứ kết – bán kết – tranh hạng 3 – chung kết · theo Điều Lệ Giải Bóng Đá</div>
+    <div class="sub" style="margin-top:-12px;margin-bottom:16px;color:#CFE2D6;">🔗 Dữ liệu dùng chung — ai có link này đều xem &amp; nhập được, tự đồng bộ. &nbsp;<span id="syncIndicator" style="color:var(--gold-soft);">Đang kết nối...</span></div>
+    <nav class="tabs">
+      <button class="tab-btn" data-view="readme">Hướng dẫn</button>
+      <button class="tab-btn active" data-view="home">Tổng quan</button>
+      <button class="tab-btn" data-view="groups">Vòng bảng</button>
+      <button class="tab-btn" data-view="knockout">Vòng loại trực tiếp</button>
+      <button class="tab-btn" data-view="stats">Thống kê</button>
+      <button class="tab-btn" data-view="teams">Đội thi đấu</button>
+      <button class="tab-btn" data-view="comms">Truyền thông</button>
+      <button class="tab-btn" data-view="rules">Thể lệ</button>
+    </nav>
+  </div>
 </header>
 
 <div class="wrap">
 
-  <!-- HOME -->
-  <section class="view active" id="view-home">
-    <div id="championBanner"></div>
-    <div class="stat-grid" id="homeStats"></div>
-    <div class="progress-track" id="progressTrack" style="margin:-16px 0 26px;"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
-    <div class="two-col">
-      <div>
-        <div class="panel">
-          <div class="panel-head">Trận đấu sắp tới</div>
-          <div class="panel-body" id="upcomingList"></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head">Kết quả gần đây</div>
-          <div class="panel-body" id="recentList"></div>
-        </div>
-      </div>
-      <div>
-        <div class="panel">
-          <div class="panel-head">Đang dẫn đầu mỗi bảng</div>
-          <div class="panel-body" id="leadersList"></div>
-        </div>
-        <div class="panel">
-          <div class="panel-head">Vua phá lưới tạm thời</div>
-          <div class="panel-body" id="topScorerMini"></div>
-        </div>
-      </div>
-    </div>
-  </section>
+  <!-- README -->
+  <section class="view" id="view-readme">
+    <div class="section-head"><h2>Hướng dẫn sử dụng</h2></div>
+    <div class="doc-panel">
+      <p>Đây là sổ tay dùng chung cho toàn giải — mọi người mở cùng 1 link, dữ liệu tự đồng bộ. Nhập ở đâu, các tab liên quan tự cập nhật theo, không cần nhập lại thủ công.</p>
+      <table class="howto-table">
+        <tr><th>Tab</th><td>Dùng để làm gì</td></tr>
+        <tr><td>Tổng quan</td><td>Xem nhanh: tiến độ giải (bao nhiêu/32 trận), đội dẫn đầu mỗi bảng, vua phá lưới tạm thời, trận sắp tới & kết quả gần đây, banner vô địch khi có kết quả chung kết. Chỉ để <b>xem</b>, không nhập liệu tại đây.</td></tr>
+        <tr><td>Vòng bảng</td><td>Chọn bảng A/B/C/D → xem lịch 6 trận/bảng → bấm <b>"Nhập KQ"</b> để nhập tỉ số, cầu thủ ghi bàn, thẻ phạt. Bảng xếp hạng bên cạnh tự tính lại ngay sau khi lưu.</td></tr>
+        <tr><td>Vòng loại trực tiếp</td><td>Sau khi 1 bảng đấu xong 6 trận, Nhất/Nhì bảng đó <b>tự động</b> được đưa vào Tứ kết — không cần nhập tay tên đội. Bấm vào từng trận để nhập kết quả, đội thắng tự tiến vào Bán kết → Chung kết; đội thua Bán kết tự vào Tranh hạng 3.</td></tr>
+        <tr><td>Thống kê</td><td>Tự tính từ toàn bộ kết quả đã nhập ở Vòng bảng + Vòng loại trực tiếp: vua phá lưới, đội fair-play, tổng hợp bàn thắng/thua/thẻ theo từng đội. Không có gì để nhập tay ở đây.</td></tr>
+        <tr><td>Đội thi đấu</td><td>Đổi tên 24 đội và nhập danh sách cầu thủ (nên theo định dạng "Số áo - Tên"). Danh sách này sẽ hiện ra để <b>chọn</b> khi ghi bàn thắng/thẻ phạt ở tab Vòng bảng và Vòng loại trực tiếp. Có thể nhập nhanh bằng nút <b>"📥 Nhập từ Excel"</b> thay vì gõ tay từng ô — dùng file mẫu đi kèm.</td></tr>
+        <tr><td>Truyền thông</td><td>Kênh riêng cho công tác truyền thông giải đấu — không liên quan tới kết quả bóng đá. Thêm nội dung đã thống nhất, cập nhật trạng thái đăng tải, ghi nhận feedback/góp ý.</td></tr>
+        <tr><td>Thể lệ</td><td>Nội dung điều lệ chính thức của giải, chỉ để tra cứu — không chỉnh sửa được trong tool.</td></tr>
+      </table>
 
-  <!-- GROUPS -->
-  <section class="view" id="view-groups">
-    <div class="section-head">
-      <h2>Vòng bảng</h2>
-      <div class="note">Mỗi đội đá 2 trận trong bảng · thắng 3đ, hòa 1đ, thua 0đ</div>
-    </div>
-    <div class="group-tabs" id="groupTabs"></div>
-    <div class="two-col">
-      <div class="panel">
-        <div class="panel-head" id="groupScheduleHead">Lịch thi đấu — Bảng A</div>
-        <div class="panel-body" id="groupSchedule"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-head" id="groupStandHead">Bảng xếp hạng — Bảng A</div>
-        <div class="panel-body" id="groupStandings"></div>
-      </div>
-    </div>
-  </section>
+      <h4>Các tab liên kết với nhau như thế nào</h4>
+      <div class="flow-grid">
+        <div class="flow-card"><b>1. Đội thi đấu</b>Tên đội & danh sách cầu thủ</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card"><b>2. Vòng bảng</b>Nhập tỉ số, bàn thắng, thẻ phạt từng trận</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card"><b>3. Vòng loại trực tiếp</b>Tự lấy Nhất/Nhì, đội thắng tự tiến vòng</div>
+      </div>
+      <div class="flow-grid" style="grid-template-columns:1fr auto 1fr;max-width:520px;">
+        <div class="flow-card"><b>Vòng bảng + Vòng loại</b>Toàn bộ kết quả đã nhập</div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-card"><b>Tổng quan & Thống kê</b>Tự tổng hợp, không cần nhập lại</div>
+      </div>
 
-  <!-- KNOCKOUT -->
-  <section class="view" id="view-knockout">
-    <div class="section-head">
-      <h2>Vòng loại trực tiếp</h2>
-      <div class="note">Nhất/Nhì mỗi bảng vào tứ kết · đá 1 trận, hòa thì đá luân lưu</div>
-    </div>
-    <div class="bracket" id="bracketWrap"></div>
-    <div class="panel third-place">
-      <div class="panel-head">Tranh hạng 3</div>
-      <div class="panel-body" id="thirdPlaceWrap"></div>
-    </div>
-  </section>
+      <div class="doc-callout"><b>Mẹo nhỏ:</b> sau khi nhập xong ở "Đội thi đấu", nhớ bấm chuột ra ngoài ô nhập (hoặc Tab) để tool tự lưu — không có nút "Lưu" riêng ở tab đó. Các tab khác (Vòng bảng, Vòng loại, Truyền thông) có nút "Lưu" rõ ràng trong form nhập.</div>
+    </div>
+  </section>
 
-  <!-- STATS -->
-  <section class="view" id="view-stats">
-    <div class="section-head"><h2>Thống kê giải đấu</h2></div>
-    <div class="two-col">
-      <div class="panel">
-        <div class="panel-head">Vua phá lưới</div>
-        <div class="panel-body"><ul class="rank-list" id="topScorers"></ul></div>
-      </div>
-      <div class="panel">
-        <div class="panel-head">Đội chơi Fair-play nhất</div>
-        <div class="panel-body"><ul class="rank-list" id="fairPlay"></ul></div>
-      </div>
-    </div>
-    <div class="panel">
-      <div class="panel-head">Tổng hợp theo đội</div>
-      <div class="panel-body" id="teamTotals" style="overflow-x:auto;"></div>
-    </div>
-  </section>
+  <!-- HOME -->
+  <section class="view active" id="view-home">
+    <div id="championBanner"></div>
+    <div class="stat-grid" id="homeStats"></div>
+    <div class="progress-track" id="progressTrack" style="margin:-16px 0 26px;"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+    <div class="two-col">
+      <div>
+        <div class="panel">
+          <div class="panel-head">Trận đấu sắp tới</div>
+          <div class="panel-body" id="upcomingList"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">Kết quả gần đây</div>
+          <div class="panel-body" id="recentList"></div>
+        </div>
+      </div>
+      <div>
+        <div class="panel">
+          <div class="panel-head">Đang dẫn đầu mỗi bảng</div>
+          <div class="panel-body" id="leadersList"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">Vua phá lưới tạm thời</div>
+          <div class="panel-body" id="topScorerMini"></div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <!-- TEAMS -->
-  <section class="view" id="view-teams">
-    <div class="section-head">
-      <h2>Đội thi đấu</h2>
-      <div class="note">Đổi tên đội và nhập danh sách cầu thủ — tự lưu</div>
-    </div>
-    <div class="empty-note" style="padding:0 0 14px;">Theo Điều lệ: tối đa 12 cầu thủ/đội (5 chính thức, 7 dự bị). Nên nhập theo định dạng <strong>Số áo - Tên cầu thủ</strong> (vd: <em>7 - Nguyễn Văn A</em>) để dễ phân biệt khi ghi bàn thắng/thẻ phạt, mỗi dòng 1 cầu thủ.</div>
-    <div id="teamsWrap"></div>
-  </section>
+  <!-- GROUPS -->
+  <section class="view" id="view-groups">
+    <div class="section-head">
+      <h2>Vòng bảng</h2>
+      <div class="note">Mỗi đội đá 2 trận trong bảng · thắng 3đ, hòa 1đ, thua 0đ</div>
+    </div>
+    <div class="group-tabs" id="groupTabs"></div>
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-head" id="groupScheduleHead">Lịch thi đấu — Bảng A</div>
+        <div class="panel-body" id="groupSchedule"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head" id="groupStandHead">Bảng xếp hạng — Bảng A</div>
+        <div class="panel-body" id="groupStandings"></div>
+      </div>
+    </div>
+  </section>
 
-  <!-- COMMS -->
-  <section class="view" id="view-comms">
-    <div class="section-head">
-      <h2>Truyền thông</h2>
-      <div class="note">Nội dung đã thống nhất · trạng thái đăng tải · feedback nội bộ</div>
-    </div>
-    <div class="comms-toolbar"><button class="btn btn-primary" id="addCommsBtn">+ Thêm nội dung truyền thông</button></div>
-    <div class="comms-list" id="commsList"></div>
-  </section>
+  <!-- KNOCKOUT -->
+  <section class="view" id="view-knockout">
+    <div class="section-head">
+      <h2>Vòng loại trực tiếp</h2>
+      <div class="note">Nhất/Nhì mỗi bảng vào tứ kết · đá 1 trận, hòa thì đá luân lưu</div>
+    </div>
+    <div class="bracket" id="bracketWrap"></div>
+    <div class="panel third-place">
+      <div class="panel-head">Tranh hạng 3</div>
+      <div class="panel-body" id="thirdPlaceWrap"></div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <section class="view" id="view-stats">
+    <div class="section-head"><h2>Thống kê giải đấu</h2></div>
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-head">Vua phá lưới</div>
+        <div class="panel-body"><ul class="rank-list" id="topScorers"></ul></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">Đội chơi Fair-play nhất</div>
+        <div class="panel-body"><ul class="rank-list" id="fairPlay"></ul></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Tổng hợp theo đội</div>
+      <div class="panel-body" id="teamTotals" style="overflow-x:auto;"></div>
+    </div>
+  </section>
+
+  <!-- TEAMS -->
+  <section class="view" id="view-teams">
+    <div class="section-head">
+      <h2>Đội thi đấu</h2>
+      <div class="note">Đổi tên đội và nhập danh sách cầu thủ — tự lưu</div>
+    </div>
+    <div class="empty-note" style="padding:0 0 14px;">Theo Điều lệ: tối đa 12 cầu thủ/đội (5 chính thức, 7 dự bị). Nên nhập theo định dạng <strong>Số áo - Tên cầu thủ</strong> (vd: <em>7 - Nguyễn Văn A</em>) để dễ phân biệt khi ghi bàn thắng/thẻ phạt, mỗi dòng 1 cầu thủ.</div>
+    <div class="comms-toolbar" style="justify-content:flex-start;gap:10px;">
+      <button class="btn btn-primary" id="importExcelBtn" type="button">📥 Nhập từ Excel</button>
+      <input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display:none;">
+      <span class="empty-note" style="padding:0;">Dùng file mẫu để điền tên đội & cầu thủ nhanh hơn thay vì gõ tay từng ô.</span>
+    </div>
+    <div id="teamsWrap"></div>
+  </section>
+
+  <!-- COMMS -->
+  <section class="view" id="view-comms">
+    <div class="section-head">
+      <h2>Truyền thông</h2>
+      <div class="note">Nội dung đã thống nhất · trạng thái đăng tải · feedback nội bộ</div>
+    </div>
+    <div class="comms-toolbar"><button class="btn btn-primary" id="addCommsBtn">+ Thêm nội dung truyền thông</button></div>
+    <div class="comms-list" id="commsList"></div>
+  </section>
+
+  <!-- RULES -->
+  <section class="view" id="view-rules">
+    <div class="section-head">
+      <h2>Thể lệ giải đấu</h2>
+      <div class="note">Trích nguyên văn Điều Lệ Giải Bóng Đá do BTC ban hành — chỉ để tra cứu</div>
+    </div>
+
+    <div class="doc-panel">
+      <h3>I. Mục đích</h3>
+      <ul>
+        <li>Rèn luyện sức khỏe, tăng cường tinh thần giao lưu kết nối giữa các thành viên trong Công Ty.</li>
+        <li>Xây dựng tinh thần đoàn kết giao lưu giữa các Bộ phận/Phòng ban.</li>
+      </ul>
+    </div>
+
+    <div class="doc-panel">
+      <h3>II. Yêu cầu</h3>
+      <h4>1. Đối với cầu thủ</h4>
+      <ul>
+        <li>Tuân thủ tuyệt đối quy định, điều lệ từ BTC đưa ra.</li>
+        <li>Tuân thủ hiệu lệnh/phán quyết của trọng tài trong thời gian thi đấu.</li>
+        <li>Tất cả các nhân viên đang hoạt động tại Hub thuộc phạm vi quản của FLM HCM.</li>
+        <li>Cầu thủ gia nhập trước ngày 01/09/2026.</li>
+      </ul>
+      <h4>2. Đối với cổ động viên</h4>
+      <ul>
+        <li>Tuân thủ hoàn toàn vào sự sắp xếp của BTC giải đấu về chỗ ngồi, khoảng cách với đường biên khi diễn ra trận đấu.</li>
+        <li>Không tự ý vào sân khi trận đấu đang diễn ra.</li>
+      </ul>
+    </div>
+
+    <div class="doc-panel">
+      <h3>III. Điều lệ kỹ thuật</h3>
+
+      <h4>1. Thông tin giải đấu</h4>
+      <ul>
+        <li>Tên: <b>HỘI THAO LIÊN HUB FLM HCM 2026</b></li>
+        <li>Đơn vị tài trợ: <b>WFX</b></li>
+      </ul>
+
+      <h4>2. Đối tượng tham dự</h4>
+      <ul>
+        <li>Tất cả các nhân viên đang hoạt động tại Hub thuộc phạm vi quản của FLM HCM, bao gồm <b>FTE / Driver / Rider / SPBO</b>.</li>
+      </ul>
+
+      <h4>3. Đăng ký thi đấu</h4>
+      <p>Các đội tham gia thi đấu gửi thông tin đăng ký theo Form:</p>
+      <div style="overflow-x:auto;">
+        <table class="reg-table">
+          <tr>
+            <th>Tên đội</th><th>Hub làm việc</th><th>Hubcode</th><th>Họ&nbsp;tên</th><th>MNV</th>
+            <th>Vị trí làm việc</th><th>CCCD</th><th>SDT liên hệ</th><th>ZONE trực thuộc</th>
+            <th>Màu đồng phục</th><th>Số áo thi đấu</th><th>AOM confirm</th>
+          </tr>
+          <tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>
+        </table>
+      </div>
+      <ul>
+        <li>Số lượng cầu thủ cho 1 đội: 12 nhân viên (có thể ghép nhiều hub trong zone).</li>
+        <li>Thời gian đăng ký số đội mỗi zone trước ngày <b>05/9/2026</b>.</li>
+        <li>Danh sách cầu thủ chốt cuối ngày <b>14/09/2026</b>, sau thời gian này BTC sẽ không hỗ trợ điều chỉnh thông tin.</li>
+      </ul>
+
+      <h4>4. Trang phục thi đấu</h4>
+      <ul>
+        <li>Mỗi đội phải có đồng phục với số áo rõ ràng, khác nhau cho từng cầu thủ. Số áo phải đúng theo danh sách đăng ký, nếu có bất cứ sự thay đổi nào phải báo BTC và đội đối thủ trước 30 phút diễn ra trận đấu.</li>
+        <li>Thủ môn phải có trang phục thi đấu khác màu với các cầu thủ còn lại.</li>
+        <li>Trong trường hợp 2 đội có màu áo tương đồng nhau, một trong hai đội cần sử dụng áo Pitch để thi đấu (tự nguyện hoặc bốc thăm ngẫu nhiên).</li>
+      </ul>
+
+      <h4>5. Hình thức thi đấu</h4>
+      <ul>
+        <li>Chia thành 04 bảng đấu: A, B, C, D (bốc thăm để xếp bảng).</li>
+        <li>Vòng Bảng:
+          <ul>
+            <li>Thi đấu vòng tròn tính điểm (ghép cặp ngẫu nhiên, 1 team đấu 2 trận).</li>
+            <li>Bốc thăm xếp đội, ví dụ bảng A sẽ có A1, A2, A3, A4, A5, A6.</li>
+            <li>Lượt 1: A1 đấu với A2 | A3 đấu với A4 | A5 đấu với A6.</li>
+            <li>Lượt 2: A2 đấu với A3 | A4 đấu với A5 | A6 đấu với A1.</li>
+            <li>02 đội nhất nhì mỗi bảng sẽ vào vòng Tứ Kết.</li>
+          </ul>
+        </li>
+        <li>Tứ Kết: Chia làm 4 cặp đấu
+          <ul>
+            <li>Tứ kết 1: Nhất A vs Nhì B</li>
+            <li>Tứ kết 2: Nhất B vs Nhì A</li>
+            <li>Tứ kết 3: Nhất C vs Nhì D</li>
+            <li>Tứ kết 4: Nhất D vs Nhì C</li>
+          </ul>
+        </li>
+        <li>Bán Kết:
+          <ul>
+            <li>Bán kết 1: Thắng TK1 vs Thắng TK3</li>
+            <li>Bán kết 2: Thắng TK2 vs Thắng TK4</li>
+          </ul>
+        </li>
+        <li>Tranh Hạng 3: Thua BK1 vs Thua BK2</li>
+        <li>Chung Kết: Thắng BK1 vs Thắng BK2</li>
+      </ul>
+
+      <h4>6. Thể thức thi đấu</h4>
+      <ul>
+        <li>Cách tính điểm:
+          <ul><li>Thắng: 3 điểm</li><li>Hòa: 1 điểm</li><li>Thua: 0 điểm</li></ul>
+        </li>
+        <li>Nếu các đội bằng điểm, thứ hạng ưu tiên sẽ được xếp theo các tiêu chí:
+          <ul>
+            <li>Hiệu số bàn thắng/thua (a)</li>
+            <li>Tổng số bàn thắng ghi được (b)</li>
+            <li>Số thẻ phạt (c)</li>
+            <li>Đá luân lưu 01 quả quyết định (nếu các chỉ số a, b, c trên bằng nhau)</li>
+          </ul>
+        </li>
+      </ul>
+      <div class="doc-callout">
+        <b>a/ Hiệu số bàn thắng/bàn thua</b> (thường gọi tắt là <b>Hiệu số</b>) là con số chênh lệch giữa số bàn thắng đội bạn ghi được và số bàn thua đội bạn phải nhận.<br><br>
+        <i>Hiệu số = Tổng Số Bàn Thắng − Tổng Số Bàn Thua</i><br><br>
+        <b>Ví dụ:</b> Sau 3 trận đấu, hai đội A và B bằng điểm nhau (cùng có 6 điểm). Ban tổ chức sẽ tính Hiệu số để xếp hạng:
+        <ul>
+          <li>Đội A: Ghi được 8 bàn, bị thủng lưới 3 bàn → Hiệu số của Đội A = 8 − 3 = +5</li>
+          <li>Đội B: Ghi được 5 bàn, bị thủng lưới 2 bàn → Hiệu số của Đội B = 5 − 2 = +3</li>
+        </ul>
+        <b>Kết quả:</b> Đội A xếp trên Đội B vì có hiệu số cao hơn (+5 so với +3).<br><br>
+        <b>Ý nghĩa:</b> Hiệu số giúp đánh giá đội nào thi đấu hiệu quả hơn cả về tấn công (ghi nhiều bàn) lẫn phòng thủ (thủng lưới ít).<br><br>
+        Nếu Hiệu số vẫn bằng nhau (ví dụ cả 2 đội đều là +5), lúc đó mới tính tiếp đến chỉ số phụ thứ 3:<br><br>
+        <b>b/ Tổng số bàn thắng</b> (đội nào ghi nhiều bàn hơn sẽ xếp trên).<br><br>
+        <b>c/ Thẻ Phạt</b> (nếu tổng số bàn thắng vẫn bằng nhau thì xét đội nào ít thẻ phạt hơn sẽ chiến thắng).<br><br>
+        <b>=&gt; Nếu vẫn không xác định được đội thắng thua sẽ tiến hành đá phạt luân lưu.</b>
+      </div>
+      <div class="doc-callout">
+        <b>Từ vòng Tứ Kết</b>, nếu 2 đội hòa nhau, sẽ áp dụng hình thức đá pen để phân định kết quả.
+      </div>
+
+      <h4>7. Luật thi đấu</h4>
+      <ul>
+        <li>Áp dụng luật thi đấu bóng đá 5 người mới nhất do Ủy ban Thể dục Thể thao ban hành (<a href="https://vff.org.vn/luat-van-ban/luat-bong-da-5-nguoi-do-uy-ban-the-duc-the-thao-ban-hanh/" target="_blank" rel="noopener">link tham khảo</a>).</li>
+        <li><b>Đá biên:</b> Thay thế cho ném biên. Bóng đặt chết trên đường biên dọc, thực hiện trong vòng 4 giây.</li>
+        <li><b>Phát bóng:</b> Thủ môn phát bóng bằng tay từ vòng cấm, bóng phải rời vòng cấm mới tính trong cuộc.</li>
+        <li>Mỗi hiệp 20 phút x2 (nghỉ giữa hiệp 10 phút). Đổi sân sau khi kết thúc 1 hiệp.</li>
+        <li><b>Số lượng cầu thủ:</b> Tối đa 12 cầu thủ/đội (5 chính thức, 7 dự bị). Thay người không giới hạn và được thực hiện khi bóng trong hoặc ngoài cuộc (phải thông báo trọng tài). Mỗi đội phải có tối thiểu 05 cầu thủ để bắt đầu trận đấu.</li>
+        <li>Mỗi đội có 01 quyền hội ý (trong thời gian 1 phút) ở mỗi hiệp và không cộng dồn nếu không sử dụng.</li>
+      </ul>
+      <div class="doc-callout"><i>* Thời gian thi đấu có thể thay đổi tùy thuộc vào điều kiện thời tiết và số lượng đội tham gia thực tế. BTC sẽ cập nhật thông tin sớm nhất tới các đội nếu có thay đổi.</i></div>
+
+      <h4>8. Kiểm tra tư cách thi đấu trước mỗi trận</h4>
+      <ul>
+        <li>Vòng Bảng: các đội cùng bảng sẽ được phân công để kiểm tra chéo theo sự sắp xếp từ BTC.</li>
+        <li>Vòng Tứ kết trở đi: hai đội đối đầu sẽ tự kiểm tra chéo lẫn nhau.
+          <ul>
+            <li>Trước giờ thi đấu 15 phút cầu thủ phải có mặt tại sân để điểm danh.</li>
+            <li>Khi tham dự phải mang CCCD bản gốc (hoặc tài khoản VNeID).</li>
+            <li>BTC sẽ đối chiếu thông tin số CCCD và gương mặt để xác thực.</li>
+            <li>BTC sẽ kiểm tra tính hợp lệ của cầu thủ tham gia (nếu dính thẻ đỏ sẽ thay thế cầu thủ khác).</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h4>9. Vận hành</h4>
+      <ul>
+        <li>Giám sát trận đấu và trọng tài: Do BTC sắp xếp.</li>
+        <li>Sau mỗi trận sẽ ghi nhận điểm và thẻ phạt của mỗi đội.</li>
+        <li>Bóng thi đấu: Do BTC cung cấp (thuê sân đã có bóng của sân).</li>
+      </ul>
+
+      <h4>10. Các quy định khác</h4>
+      <ul>
+        <li>Mọi ý kiến hoặc khiếu nại liên quan đến quyết định của trọng tài và các vấn đề trong giải đấu sẽ chỉ được tiếp nhận thông qua đội trưởng của mỗi đội.</li>
+        <li>Trong trận, các cầu thủ chấp hành sự điều khiển trận đấu và các phán quyết của trọng tài, giữ thái độ bình tĩnh và tinh thần thể thao.</li>
+        <li>Việc thay người trong trận đấu không bị giới hạn và có thể thực hiện khi bóng ngoài cuộc. Cầu thủ đã rời sân vẫn được phép vào lại thay cho cầu thủ khác. Tuy nhiên, cầu thủ rời sân phải hoàn toàn ra khỏi đường biên trước khi cầu thủ dự bị được vào sân (được điều phối bởi trọng tài).</li>
+        <li>BTC chỉ hỗ trợ sơ cứu y tế các chấn thương nhẹ. Những trường hợp chấn thương nặng ngoài ý muốn hoặc do xô xát, sau trận đấu đội trưởng sẽ là người đại diện giải quyết, BTC không có trách nhiệm và không can dự vào các tình huống này.</li>
+        <li>Để đảm bảo tính công bằng và cạnh tranh lành mạnh, giá trị giải thưởng ở mỗi địa điểm có thể sẽ được điều chỉnh nếu số lượng đăng ký ở các địa điểm có sự chênh lệch đáng kể.</li>
+      </ul>
+
+      <h4>11. Kỷ luật</h4>
+      <ul>
+        <li>Trong trường hợp BTC phát hiện đội có hành vi gian lận (sử dụng thành viên không nằm trong danh sách đã đăng ký trước đó), BTC sẽ áp dụng các hình thức xử lý sau:
+          <ul>
+            <li>Xử thua trận liên quan.</li>
+            <li>Loại đội khỏi giải đấu.</li>
+            <li>Cấm toàn bộ thành viên của đội tham gia các giải thể thao do Shopee tài trợ trong vòng 01 năm kể từ ngày có kết luận từ BTC.</li>
+            <li>Gửi email thông báo đến quản lý trực tiếp và HRBP của các cá nhân vi phạm.</li>
+          </ul>
+        </li>
+        <li>Cầu thủ có thái độ, hành vi không đúng mực sẽ nhận hình thức kỷ luật từ BTC tùy theo mức độ vi phạm.</li>
+        <li>Đội không đủ tối thiểu năm (05) cầu thủ để bắt đầu trận đấu hoặc đến trễ quá 15 phút so với thời gian quy định sẽ bị xem là bỏ cuộc và bị xử thua (0 − 3).</li>
+        <li>Hai (02) thẻ vàng sẽ tương đương một (01) thẻ đỏ gián tiếp.</li>
+        <li>Cầu thủ nhận thẻ đỏ (trực tiếp hoặc gián tiếp) phải rời khỏi sân ngay lập tức và không được tiếp tục thi đấu trong trận đó và 1 trận kế tiếp, đồng thời đội bị thẻ đỏ sẽ chơi thiếu người trong 5 phút hoặc đến khi bị thủng lưới.</li>
+        <li>Một đội phạm sáu (06) lỗi cộng dồn trong cùng một hiệp sẽ bị thổi đá phạt đền từ chấm 10m (second penalty).</li>
+      </ul>
+    </div>
+  </section>
 
 </div>
 
 <footer class="appfoot">
-  <span>Dữ liệu được lưu tự động trên trình duyệt này (không gửi lên máy chủ nào khác).</span>
-  <span>
-    <button class="btn-danger-outline" id="exportBtn" type="button">Xuất dữ liệu (.json)</button>
-    <button class="btn-danger-outline" id="importBtnTrigger" type="button">Nhập dữ liệu</button>
-    <input type="file" id="importFile" accept="application/json" style="display:none;">
-  </span>
+  <span>Dữ liệu dùng chung, tự đồng bộ cho mọi người có link này. Nên chỉ chia sẻ link trong nội bộ công ty.</span>
+  <span>
+    <button class="btn-danger-outline" id="exportBtn" type="button">Xuất dữ liệu (.json)</button>
+    <button class="btn-danger-outline" id="importBtnTrigger" type="button">Nhập dữ liệu</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+  </span>
 </footer>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-head">
-      <h3 id="modalTitle">Nhập kết quả trận đấu</h3>
-      <button class="close-x" id="modalClose">&times;</button>
-    </div>
-    <div class="modal-body" id="modalBody"></div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" id="modalCancel">Hủy</button>
-      <button class="btn btn-primary" id="modalSave">Lưu kết quả</button>
-    </div>
-  </div>
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">Nhập kết quả trận đấu</h3>
+      <button class="close-x" id="modalClose">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="modalCancel">Hủy</button>
+      <button class="btn btn-primary" id="modalSave">Lưu kết quả</button>
+    </div>
+  </div>
 </div>
 
 <!-- COMMS MODAL -->
 <div class="modal-overlay" id="commsModalOverlay">
-  <div class="modal" style="max-width:640px;">
-    <div class="modal-head">
-      <h3 id="commsModalTitle">Nội dung truyền thông</h3>
-      <button class="close-x" id="commsModalClose">&times;</button>
-    </div>
-    <div class="modal-body" id="commsModalBody"></div>
-    <div class="modal-foot" style="justify-content:space-between;">
-      <button class="btn-danger-outline" id="commsDeleteBtn" type="button">Xóa</button>
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-ghost" id="commsCancel">Hủy</button>
-        <button class="btn btn-primary" id="commsSave">Lưu</button>
-      </div>
-    </div>
-  </div>
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-head">
+      <h3 id="commsModalTitle">Nội dung truyền thông</h3>
+      <button class="close-x" id="commsModalClose">&times;</button>
+    </div>
+    <div class="modal-body" id="commsModalBody"></div>
+    <div class="modal-foot" style="justify-content:space-between;">
+      <button class="btn-danger-outline" id="commsDeleteBtn" type="button">Xóa</button>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" id="commsCancel">Hủy</button>
+        <button class="btn btn-primary" id="commsSave">Lưu</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="toastWrap"></div>
@@ -510,86 +767,135 @@ const STORAGE_KEY = 'flm_giai_noi_bo_v1';
 function defaultTeamName(id){ return 'Đội ' + id; }
 
 function buildDefaultState(){
-  const teams = {};
-  BANGS.forEach(b=>{
-    for(let i=1;i<=6;i++){
-      const id = b+i;
-      teams[id] = { name: defaultTeamName(id), players: [] };
-    }
-  });
-  return { teams, matches: {}, comms: [] };
+  const teams = {};
+  BANGS.forEach(b=>{
+    for(let i=1;i<=6;i++){
+      const id = b+i;
+      teams[id] = { name: defaultTeamName(id), players: [] };
+    }
+  });
+  return { teams, matches: {}, comms: [] };
 }
 
-let state = loadState();
-function loadState(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw) return buildDefaultState();
-    const parsed = JSON.parse(raw);
-    const base = buildDefaultState();
-    // merge to be safe against schema drift
-    parsed.teams && Object.keys(parsed.teams).forEach(k=>{ if(base.teams[k]) base.teams[k] = parsed.teams[k]; });
-    if(parsed.matches) base.matches = parsed.matches;
-    if(Array.isArray(parsed.comms)) base.comms = parsed.comms;
-    return base;
-  }catch(e){ return buildDefaultState(); }
+let state = buildDefaultState();
+let isModalOpen = false;
+let lastSyncTime = null;
+
+function mergeIntoState(parsed){
+  if(!parsed) return;
+  const base = buildDefaultState();
+  parsed.teams && Object.keys(parsed.teams).forEach(k=>{ if(base.teams[k]) base.teams[k] = parsed.teams[k]; });
+  if(parsed.matches) base.matches = parsed.matches;
+  if(Array.isArray(parsed.comms)) base.comms = parsed.comms;
+  state = base;
 }
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+async function fetchRemoteState(){
+  try{
+    const res = await window.storage.get(STORAGE_KEY, true);
+    return res && res.value ? JSON.parse(res.value) : null;
+  }catch(e){
+    return null; // key doesn't exist yet on first run
+  }
+}
+async function persistState(){
+  try{
+    const res = await window.storage.set(STORAGE_KEY, JSON.stringify(state), true);
+    if(!res) throw new Error('no result');
+    lastSyncTime = Date.now();
+    updateSyncIndicator();
+    return true;
+  }catch(e){
+    showToast('⚠ Không lưu được lên máy chủ dùng chung, vui lòng thử lại.');
+    return false;
+  }
+}
+// Read freshest shared data, apply a local change on top of it, then write back —
+// reduces (but cannot fully eliminate) the chance of stomping a concurrent edit from a teammate.
+async function commitChange(mutatorFn){
+  const remote = await fetchRemoteState();
+  if(remote) mergeIntoState(remote);
+  mutatorFn(state);
+  const ok = await persistState();
+  renderAll();
+  return ok;
+}
+async function pollRefresh(){
+  if(isModalOpen) return; // don't yank the rug from under someone mid-edit
+  const remote = await fetchRemoteState();
+  if(remote){
+    const incoming = JSON.stringify(remote);
+    if(incoming !== JSON.stringify(state)){
+      mergeIntoState(remote);
+      renderAll();
+    }
+  }
+  lastSyncTime = Date.now();
+  updateSyncIndicator();
+}
+function updateSyncIndicator(){
+  const el = document.getElementById('syncIndicator');
+  if(!el) return;
+  if(!lastSyncTime){ el.textContent = 'Đang kết nối...'; return; }
+  const d = new Date(lastSyncTime);
+  const p = n=>String(n).padStart(2,'0');
+  el.textContent = 'Đồng bộ lúc ' + p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
 function getMatch(id){
-  if(!state.matches[id]) state.matches[id] = { score1:null, score2:null, goals:[], cards:[], penaltyWinner:null };
-  return state.matches[id];
+  if(!state.matches[id]) state.matches[id] = { score1:null, score2:null, goals:[], cards:[], penaltyWinner:null };
+  return state.matches[id];
 }
 function hasResult(id){
-  const m = state.matches[id];
-  return !!(m && m.score1!==null && m.score1!=='' && m.score2!==null && m.score2!=='');
+  const m = state.matches[id];
+  return !!(m && m.score1!==null && m.score1!=='' && m.score2!==null && m.score2!=='');
 }
 
 /* ---- Fixed schedule: vòng bảng ---- */
 function groupPairs(b){
-  return [
-    [b+'1', b+'2'], [b+'3', b+'4'], [b+'5', b+'6'],
-    [b+'2', b+'3'], [b+'4', b+'5'], [b+'6', b+'1'],
-  ];
+  return [
+    [b+'1', b+'2'], [b+'3', b+'4'], [b+'5', b+'6'],
+    [b+'2', b+'3'], [b+'4', b+'5'], [b+'6', b+'1'],
+  ];
 }
 const GROUP_TIME_SLOTS = [
-  {date:'19/9/2026', time:'7:00 - 8:00',  san:{A:1,B:4}},
-  {date:'19/9/2026', time:'8:00 - 9:00',  san:{C:1,D:4}},
-  {date:'19/9/2026', time:'9:00 - 10:00', san:{A:1,B:4}},
-  {date:'19/9/2026', time:'10:00 - 11:00',san:{C:1,D:4}},
+  {date:'19/9/2026', time:'7:00 - 8:00',  san:{A:1,B:4}},
+  {date:'19/9/2026', time:'8:00 - 9:00',  san:{C:1,D:4}},
+  {date:'19/9/2026', time:'9:00 - 10:00', san:{A:1,B:4}},
+  {date:'19/9/2026', time:'10:00 - 11:00',san:{C:1,D:4}},
 ];
 // Build explicit group match list matching the real schedule (24 matches)
 const GROUP_MATCHES = [];
 BANGS.forEach(b=>{
-  const pairs = groupPairs(b);
-  const slotForBang = (b==='A'||b==='B') ? [0,2] : [1,3]; // A/B share lượt1&2 slots 0&2 ; C/D use 1&3
-  // first 3 pairs -> first slot for this bang's lượt1 ; last 3 pairs -> second slot lượt2
-  const sanBase = {A:1,B:4,C:1,D:4}[b];
-  pairs.forEach((pair, idx)=>{
-    const lap = idx < 3 ? 0 : 1; // lượt 1 or lượt 2
-    const slotIndex = slotForBang[lap];
-    const slot = GROUP_TIME_SLOTS[slotIndex];
-    const san = sanBase + (idx % 3);
-    GROUP_MATCHES.push({
-      id: 'G-'+b+'-'+(idx+1),
-      bang: b,
-      round:'group',
-      team1Ref:{type:'fixed', id:pair[0]},
-      team2Ref:{type:'fixed', id:pair[1]},
-      date: slot.date, time: slot.time, san: san
-    });
-  });
+  const pairs = groupPairs(b);
+  const slotForBang = (b==='A'||b==='B') ? [0,2] : [1,3]; // A/B share lượt1&2 slots 0&2 ; C/D use 1&3
+  // first 3 pairs -> first slot for this bang's lượt1 ; last 3 pairs -> second slot lượt2
+  const sanBase = {A:1,B:4,C:1,D:4}[b];
+  pairs.forEach((pair, idx)=>{
+    const lap = idx < 3 ? 0 : 1; // lượt 1 or lượt 2
+    const slotIndex = slotForBang[lap];
+    const slot = GROUP_TIME_SLOTS[slotIndex];
+    const san = sanBase + (idx % 3);
+    GROUP_MATCHES.push({
+      id: 'G-'+b+'-'+(idx+1),
+      bang: b,
+      round:'group',
+      team1Ref:{type:'fixed', id:pair[0]},
+      team2Ref:{type:'fixed', id:pair[1]},
+      date: slot.date, time: slot.time, san: san
+    });
+  });
 });
 
 /* ---- Fixed schedule: vòng loại trực tiếp ---- */
 const KNOCKOUT_MATCHES = [
-  {id:'TK1', round:'qf', label:'Tứ kết 1', team1Ref:{type:'group',bang:'A',pos:1}, team2Ref:{type:'group',bang:'B',pos:2}, date:'26/9/2026', time:'7:00 - 7:40', san:1},
-  {id:'TK2', round:'qf', label:'Tứ kết 2', team1Ref:{type:'group',bang:'B',pos:1}, team2Ref:{type:'group',bang:'A',pos:2}, date:'26/9/2026', time:'7:00 - 7:40', san:2},
-  {id:'TK3', round:'qf', label:'Tứ kết 3', team1Ref:{type:'group',bang:'C',pos:1}, team2Ref:{type:'group',bang:'D',pos:2}, date:'26/9/2026', time:'7:00 - 7:40', san:3},
-  {id:'TK4', round:'qf', label:'Tứ kết 4', team1Ref:{type:'group',bang:'D',pos:1}, team2Ref:{type:'group',bang:'C',pos:2}, date:'26/9/2026', time:'7:00 - 7:40', san:4},
-  {id:'BK1', round:'sf', label:'Bán kết 1', team1Ref:{type:'winner',match:'TK1'}, team2Ref:{type:'winner',match:'TK3'}, date:'26/9/2026', time:'8:00 - 8:50', san:1},
-  {id:'BK2', round:'sf', label:'Bán kết 2', team1Ref:{type:'winner',match:'TK2'}, team2Ref:{type:'winner',match:'TK4'}, date:'26/9/2026', time:'8:00 - 8:50', san:2},
-  {id:'HANG3', round:'third', label:'Tranh hạng 3', team1Ref:{type:'loser',match:'BK1'}, team2Ref:{type:'loser',match:'BK2'}, date:'26/9/2026', time:'9:10 - 10:00', san:1},
-  {id:'CK', round:'final', label:'Chung kết', team1Ref:{type:'winner',match:'BK1'}, team2Ref:{type:'winner',match:'BK2'}, date:'26/9/2026', time:'10:00 - 10:50', san:2},
+  {id:'TK1', round:'qf', label:'Tứ kết 1', team1Ref:{type:'group',bang:'A',pos:1}, team2Ref:{type:'group',bang:'B',pos:2}, date:'26/9/2026', time:'7:00 - 7:40', san:1},
+  {id:'TK2', round:'qf', label:'Tứ kết 2', team1Ref:{type:'group',bang:'B',pos:1}, team2Ref:{type:'group',bang:'A',pos:2}, date:'26/9/2026', time:'7:00 - 7:40', san:2},
+  {id:'TK3', round:'qf', label:'Tứ kết 3', team1Ref:{type:'group',bang:'C',pos:1}, team2Ref:{type:'group',bang:'D',pos:2}, date:'26/9/2026', time:'7:00 - 7:40', san:3},
+  {id:'TK4', round:'qf', label:'Tứ kết 4', team1Ref:{type:'group',bang:'D',pos:1}, team2Ref:{type:'group',bang:'C',pos:2}, date:'26/9/2026', time:'7:00 - 7:40', san:4},
+  {id:'BK1', round:'sf', label:'Bán kết 1', team1Ref:{type:'winner',match:'TK1'}, team2Ref:{type:'winner',match:'TK3'}, date:'26/9/2026', time:'8:00 - 8:50', san:1},
+  {id:'BK2', round:'sf', label:'Bán kết 2', team1Ref:{type:'winner',match:'TK2'}, team2Ref:{type:'winner',match:'TK4'}, date:'26/9/2026', time:'8:00 - 8:50', san:2},
+  {id:'HANG3', round:'third', label:'Tranh hạng 3', team1Ref:{type:'loser',match:'BK1'}, team2Ref:{type:'loser',match:'BK2'}, date:'26/9/2026', time:'9:10 - 10:00', san:1},
+  {id:'CK', round:'final', label:'Chung kết', team1Ref:{type:'winner',match:'BK1'}, team2Ref:{type:'winner',match:'BK2'}, date:'26/9/2026', time:'10:00 - 10:50', san:2},
 ];
 const ALL_MATCHES = GROUP_MATCHES.concat(KNOCKOUT_MATCHES);
 const MATCH_BY_ID = {}; ALL_MATCHES.forEach(m=>MATCH_BY_ID[m.id]=m);
@@ -598,140 +904,835 @@ const MATCH_BY_ID = {}; ALL_MATCHES.forEach(m=>MATCH_BY_ID[m.id]=m);
 function teamName(id){ return id && state.teams[id] ? state.teams[id].name : null; }
 
 function showToast(msg){
-  const wrap = document.getElementById('toastWrap');
-  const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
-  wrap.appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(), 300); }, 2800);
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(), 300); }, 2800);
 }
 
 function computeGroupStandings(b){
-  const rows = {};
-  for(let i=1;i<=6;i++){
-    const id=b+i;
-    rows[id] = {id, name:teamName(id), mp:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,yellow:0,red:0};
-  }
-  GROUP_MATCHES.filter(m=>m.bang===b).forEach(m=>{
-    if(!hasResult(m.id)) return;
-    const md = getMatch(m.id);
-    const t1 = m.team1Ref.id, t2 = m.team2Ref.id;
-    const s1 = Number(md.score1), s2 = Number(md.score2);
-    rows[t1].mp++; rows[t2].mp++;
-    rows[t1].gf+=s1; rows[t1].ga+=s2;
-    rows[t2].gf+=s2; rows[t2].ga+=s1;
-    if(s1>s2){ rows[t1].w++; rows[t1].pts+=3; rows[t2].l++; }
-    else if(s2>s1){ rows[t2].w++; rows[t2].pts+=3; rows[t1].l++; }
-    else { rows[t1].d++; rows[t1].pts+=1; rows[t2].d++; rows[t2].pts+=1; }
-    (md.cards||[]).forEach(c=>{
-      if(!rows[c.team]) return;
-      if(c.type==='yellow') rows[c.team].yellow++; else rows[c.team].red++;
-    });
-  });
-  const arr = Object.values(rows);
-  arr.forEach(r=>{ r.gd = r.gf - r.ga; r.cardPts = r.yellow*1 + r.red*3; });
-  // Theo Điều lệ mục 6: Điểm > Hiệu số (a) > Tổng bàn thắng (b) > Thẻ phạt, ít hơn xếp trên (c)
-  arr.sort((a,c)=> c.pts-a.pts || c.gd-a.gd || c.gf-a.gf || a.cardPts-c.cardPts || a.id.localeCompare(c.id));
-  return arr;
+  const rows = {};
+  for(let i=1;i<=6;i++){
+    const id=b+i;
+    rows[id] = {id, name:teamName(id), mp:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,yellow:0,red:0};
+  }
+  GROUP_MATCHES.filter(m=>m.bang===b).forEach(m=>{
+    if(!hasResult(m.id)) return;
+    const md = getMatch(m.id);
+    const t1 = m.team1Ref.id, t2 = m.team2Ref.id;
+    const s1 = Number(md.score1), s2 = Number(md.score2);
+    rows[t1].mp++; rows[t2].mp++;
+    rows[t1].gf+=s1; rows[t1].ga+=s2;
+    rows[t2].gf+=s2; rows[t2].ga+=s1;
+    if(s1>s2){ rows[t1].w++; rows[t1].pts+=3; rows[t2].l++; }
+    else if(s2>s1){ rows[t2].w++; rows[t2].pts+=3; rows[t1].l++; }
+    else { rows[t1].d++; rows[t1].pts+=1; rows[t2].d++; rows[t2].pts+=1; }
+    (md.cards||[]).forEach(c=>{
+      if(!rows[c.team]) return;
+      if(c.type==='yellow') rows[c.team].yellow++; else rows[c.team].red++;
+    });
+  });
+  const arr = Object.values(rows);
+  arr.forEach(r=>{ r.gd = r.gf - r.ga; r.cardPts = r.yellow*1 + r.red*3; });
+  // Theo Điều lệ mục 6: Điểm > Hiệu số (a) > Tổng bàn thắng (b) > Thẻ phạt, ít hơn xếp trên (c)
+  arr.sort((a,c)=> c.pts-a.pts || c.gd-a.gd || c.gf-a.gf || a.cardPts-c.cardPts || a.id.localeCompare(c.id));
+  return arr;
 }
 function groupComplete(b){
-  return GROUP_MATCHES.filter(m=>m.bang===b).every(m=>hasResult(m.id));
+  return GROUP_MATCHES.filter(m=>m.bang===b).every(m=>hasResult(m.id));
 }
 
 function resolveTeam(ref){
-  if(!ref) return null;
-  if(ref.type==='fixed') return ref.id;
-  if(ref.type==='group'){
-    if(!groupComplete(ref.bang)) return null;
-    const st = computeGroupStandings(ref.bang);
-    return st[ref.pos-1] ? st[ref.pos-1].id : null;
-  }
-  if(ref.type==='winner' || ref.type==='loser'){
-    const res = getMatchOutcome(ref.match);
-    if(!res) return null;
-    return ref.type==='winner' ? res.winner : res.loser;
-  }
-  return null;
+  if(!ref) return null;
+  if(ref.type==='fixed') return ref.id;
+  if(ref.type==='group'){
+    if(!groupComplete(ref.bang)) return null;
+    const st = computeGroupStandings(ref.bang);
+    return st[ref.pos-1] ? st[ref.pos-1].id : null;
+  }
+  if(ref.type==='winner' || ref.type==='loser'){
+    const res = getMatchOutcome(ref.match);
+    if(!res) return null;
+    return ref.type==='winner' ? res.winner : res.loser;
+  }
+  return null;
 }
 function getMatchTeams(matchId){
-  const m = MATCH_BY_ID[matchId];
-  return { t1: resolveTeam(m.team1Ref), t2: resolveTeam(m.team2Ref) };
+  const m = MATCH_BY_ID[matchId];
+  return { t1: resolveTeam(m.team1Ref), t2: resolveTeam(m.team2Ref) };
 }
 function getMatchOutcome(matchId){
-  const m = MATCH_BY_ID[matchId];
-  const {t1,t2} = getMatchTeams(matchId);
-  if(!t1 || !t2) return null;
-  if(!hasResult(matchId)) return null;
-  const md = getMatch(matchId);
-  const s1 = Number(md.score1), s2=Number(md.score2);
-  if(s1===s2){
-    if(m.round==='group') return {winner:null, loser:null, draw:true};
-    if(!md.penaltyWinner) return null; // knockout tie needs penalty resolution
-    const winner = md.penaltyWinner;
-    const loser = winner===t1 ? t2 : t1;
-    return {winner, loser, draw:false, penalty:true};
-  }
-  const winner = s1>s2 ? t1 : t2;
-  const loser = s1>s2 ? t2 : t1;
-  return {winner, loser, draw:false};
+  const m = MATCH_BY_ID[matchId];
+  const {t1,t2} = getMatchTeams(matchId);
+  if(!t1 || !t2) return null;
+  if(!hasResult(matchId)) return null;
+  const md = getMatch(matchId);
+  const s1 = Number(md.score1), s2=Number(md.score2);
+  if(s1===s2){
+    if(m.round==='group') return {winner:null, loser:null, draw:true};
+    if(!md.penaltyWinner) return null; // knockout tie needs penalty resolution
+    const winner = md.penaltyWinner;
+    const loser = winner===t1 ? t2 : t1;
+    return {winner, loser, draw:false, penalty:true};
+  }
+  const winner = s1>s2 ? t1 : t2;
+  const loser = s1>s2 ? t2 : t1;
+  return {winner, loser, draw:false};
 }
 function matchIsKnockout(matchId){ return MATCH_BY_ID[matchId].round!=='group'; }
 function matchReady(matchId){ // both teams known
-  const {t1,t2} = getMatchTeams(matchId);
-  return !!(t1 && t2);
+  const {t1,t2} = getMatchTeams(matchId);
+  return !!(t1 && t2);
 }
 
 /* Aggregate stats across ALL played matches (group + knockout) */
 function computeAllTeamStats(){
-  const stats = {};
-  Object.keys(state.teams).forEach(id=> stats[id] = {id, name:teamName(id), mp:0,w:0,d:0,l:0,gf:0,ga:0,yellow:0,red:0});
-  ALL_MATCHES.forEach(m=>{
-    if(!hasResult(m.id)) return;
-    const {t1,t2} = getMatchTeams(m.id);
-    if(!t1 || !t2) return;
-    const md = getMatch(m.id);
-    const s1=Number(md.score1), s2=Number(md.score2);
-    if(!stats[t1] || !stats[t2]) return;
-    stats[t1].mp++; stats[t2].mp++;
-    stats[t1].gf+=s1; stats[t1].ga+=s2;
-    stats[t2].gf+=s2; stats[t2].ga+=s1;
-    if(s1>s2){stats[t1].w++; stats[t2].l++;}
-    else if(s2>s1){stats[t2].w++; stats[t1].l++;}
-    else if(m.round==='group'){ stats[t1].d++; stats[t2].d++; }
-    else {
-      const out = getMatchOutcome(m.id);
-      if(out && out.winner){ stats[out.winner].w++; stats[out.loser].l++; }
-    }
-    (md.cards||[]).forEach(c=>{
-      if(!stats[c.team]) return;
-      if(c.type==='yellow') stats[c.team].yellow++; else stats[c.team].red++;
-    });
-  });
-  const arr = Object.values(stats);
-  arr.forEach(r=> r.gd = r.gf-r.ga);
-  return arr;
+  const stats = {};
+  Object.keys(state.teams).forEach(id=> stats[id] = {id, name:teamName(id), mp:0,w:0,d:0,l:0,gf:0,ga:0,yellow:0,red:0});
+  ALL_MATCHES.forEach(m=>{
+    if(!hasResult(m.id)) return;
+    const {t1,t2} = getMatchTeams(m.id);
+    if(!t1 || !t2) return;
+    const md = getMatch(m.id);
+    const s1=Number(md.score1), s2=Number(md.score2);
+    if(!stats[t1] || !stats[t2]) return;
+    stats[t1].mp++; stats[t2].mp++;
+    stats[t1].gf+=s1; stats[t1].ga+=s2;
+    stats[t2].gf+=s2; stats[t2].ga+=s1;
+    if(s1>s2){stats[t1].w++; stats[t2].l++;}
+    else if(s2>s1){stats[t2].w++; stats[t1].l++;}
+    else if(m.round==='group'){ stats[t1].d++; stats[t2].d++; }
+    else {
+      const out = getMatchOutcome(m.id);
+      if(out && out.winner){ stats[out.winner].w++; stats[out.loser].l++; }
+    }
+    (md.cards||[]).forEach(c=>{
+      if(!stats[c.team]) return;
+      if(c.type==='yellow') stats[c.team].yellow++; else stats[c.team].red++;
+    });
+  });
+  const arr = Object.values(stats);
+  arr.forEach(r=> r.gd = r.gf-r.ga);
+  return arr;
 }
 
 function computeTopScorers(){
-  const map = {}; // key team|player
-  ALL_MATCHES.forEach(m=>{
-    const md = state.matches[m.id];
-    if(!md || !md.goals) return;
-    md.goals.forEach(g=>{
-      if(!g.player) return;
-      const key = g.team+'|'+g.player.trim();
-      if(!map[key]) map[key] = {team:g.team, player:g.player.trim(), goals:0};
-      map[key].goals++;
-    });
-  });
-  return Object.values(map).sort((a,b)=>b.goals-a.goals);
+  const map = {}; // key team|player
+  ALL_MATCHES.forEach(m=>{
+    const md = state.matches[m.id];
+    if(!md || !md.goals) return;
+    md.goals.forEach(g=>{
+      if(!g.player) return;
+      const key = g.team+'|'+g.player.trim();
+      if(!map[key]) map[key] = {team:g.team, player:g.player.trim(), goals:0};
+      map[key].goals++;
+    });
+  });
+  return Object.values(map).sort((a,b)=>b.goals-a.goals);
 }
 
 function computeFairPlay(){
-  const stats = computeAllTeamStats().filter(s=>s.mp>0);
-  stats.forEach(s=> s.fp = s.yellow*1 + s.red*3);
-  stats.sort((a,b)=> a.fp-b.fp || a.red-b.red || a.yellow-b.yellow);
-  return stats;
+  const stats = computeAllTeamStats().filter(s=>s.mp>0);
+  stats.forEach(s=> s.fp = s.yellow*1 + s.red*3);
+  stats.sort((a,b)=> a.fp-b.fp || a.red-b.red || a.yellow-b.yellow);
+  return stats;
 }
 
-/* ================
+/* ============================== RENDER: HOME ============================== */
+function renderHome(){
+  const played = ALL_MATCHES.filter(m=>hasResult(m.id)).length;
+  let totalGoals = 0;
+  ALL_MATCHES.forEach(m=>{ if(hasResult(m.id)){ const md=getMatch(m.id); totalGoals += Number(md.score1)+Number(md.score2);} });
+  let totalCards = 0;
+  ALL_MATCHES.forEach(m=>{ const md=state.matches[m.id]; if(md && md.cards) totalCards += md.cards.length; });
+
+  // Champion banner
+  const ckOutcome = hasResult('CK') ? getMatchOutcome('CK') : null;
+  const hang3Outcome = hasResult('HANG3') ? getMatchOutcome('HANG3') : null;
+  if(ckOutcome && ckOutcome.winner){
+    document.getElementById('championBanner').innerHTML = `
+      <div class="champion-banner">
+        <div class="trophy">🏆</div>
+        <div>
+          <h3>VÔ ĐỊCH GIẢI ĐẤU</h3>
+          <div class="cname">${teamName(ckOutcome.winner)}</div>
+        </div>
+        <div class="podium">
+          <div>Á quân<b>${teamName(ckOutcome.loser)}</b></div>
+          ${hang3Outcome && hang3Outcome.winner ? `<div>Hạng 3<b>${teamName(hang3Outcome.winner)}</b></div>` : ''}
+        </div>
+      </div>`;
+  } else {
+    document.getElementById('championBanner').innerHTML = '';
+  }
+
+  document.getElementById('progressFill').style.width = Math.round(played/32*100)+'%';
+
+  document.getElementById('homeStats').innerHTML = `
+    <div class="stat-card"><div class="num">${played}/32</div><div class="lbl">Trận đã đấu</div></div>
+    <div class="stat-card"><div class="num">${totalGoals}</div><div class="lbl">Tổng bàn thắng</div></div>
+    <div class="stat-card"><div class="num">${totalCards}</div><div class="lbl">Tổng số thẻ phạt</div></div>
+    <div class="stat-card"><div class="num">24</div><div class="lbl">Đội tham dự</div></div>
+  `;
+
+  const upcoming = ALL_MATCHES.filter(m=>!hasResult(m.id) && matchReady(m.id)).slice(0,8);
+  document.getElementById('upcomingList').innerHTML = upcoming.length ? upcoming.map(m=>{
+    const {t1,t2} = getMatchTeams(m.id);
+    return `<div class="match-row" style="grid-template-columns:80px 1fr auto 1fr;">
+      <div class="when">${m.date}<br>${m.time}</div>
+      <div class="team left">${teamName(t1)}</div>
+      <div class="score empty">vs</div>
+      <div class="team">${teamName(t2)}</div>
+    </div>`;
+  }).join('') : '<div class="empty-note">Chưa có trận nào sẵn sàng thi đấu.</div>';
+
+  const recentIds = ALL_MATCHES.filter(m=>hasResult(m.id));
+  const recent = recentIds.slice(-6).reverse();
+  document.getElementById('recentList').innerHTML = recent.length ? recent.map(m=>{
+    const {t1,t2} = getMatchTeams(m.id);
+    const md = getMatch(m.id);
+    return `<div class="match-row" style="grid-template-columns:1fr auto 1fr;">
+      <div class="team left">${teamName(t1)}</div>
+      <div class="score">${md.score1} - ${md.score2}</div>
+      <div class="team">${teamName(t2)}</div>
+    </div>`;
+  }).join('') : '<div class="empty-note">Chưa có kết quả nào được ghi nhận.</div>';
+
+  document.getElementById('leadersList').innerHTML = BANGS.map(b=>{
+    const st = computeGroupStandings(b)[0];
+    const complete = groupComplete(b);
+    const playedInBang = GROUP_MATCHES.filter(m=>m.bang===b && hasResult(m.id)).length;
+    return `<div class="match-row" style="grid-template-columns:40px 1fr auto auto;">
+      <div style="font-family:'Oswald',sans-serif;color:var(--gold);font-size:16px;">${b}</div>
+      <div class="team left">${st.name}</div>
+      <div class="score">${st.pts} đ</div>
+      <div><span class="bang-status-tag ${complete?'done':''}">${complete?'✓ Xong vòng bảng':playedInBang+'/6 trận'}</span></div>
+    </div>`;
+  }).join('');
+
+  const top = computeTopScorers().slice(0,5);
+  document.getElementById('topScorerMini').innerHTML = top.length ? `<ul class="rank-list">${
+    top.map((t,i)=>`<li><div class="medal">${i+1}</div><div class="name">${t.player}<div class="sub">${teamName(t.team)}</div></div><div class="amount">${t.goals}</div></li>`).join('')
+  }</ul>` : '<div class="empty-note">Chưa có bàn thắng nào.</div>';
+}
+
+/* ============================== RENDER: GROUPS ============================== */
+let currentBang = 'A';
+function renderGroupTabs(){
+  document.getElementById('groupTabs').innerHTML = BANGS.map(b=>
+    `<button class="${b===currentBang?'active':''}" data-bang="${b}">Bảng ${b}</button>`
+  ).join('');
+}
+function renderGroupView(){
+  renderGroupTabs();
+  document.getElementById('groupScheduleHead').textContent = 'Lịch thi đấu — Bảng '+currentBang;
+  document.getElementById('groupStandHead').textContent = 'Bảng xếp hạng — Bảng '+currentBang;
+
+  const matches = GROUP_MATCHES.filter(m=>m.bang===currentBang);
+  document.getElementById('groupSchedule').innerHTML = matches.map(m=>{
+    const done = hasResult(m.id);
+    const md = getMatch(m.id);
+    return `<div class="match-row">
+      <div class="when">${m.date.slice(0,5)}<br>${m.time}<br>Sân ${m.san}</div>
+      <div class="team left">${teamName(m.team1Ref.id)}</div>
+      <div class="score ${done?'':'empty'}">${done? md.score1+' - '+md.score2 : 'chưa đấu'}</div>
+      <div class="team">${teamName(m.team2Ref.id)}</div>
+      <button class="edit-btn ${done?'done':''}" data-match="${m.id}">${done?'Sửa':'Nhập KQ'}</button>
+    </div>`;
+  }).join('');
+
+  const standings = computeGroupStandings(currentBang);
+  document.getElementById('groupStandings').innerHTML = `
+    <table>
+      <thead><tr><th>#</th><th>Đội</th><th class="num">Trận</th><th class="num">T</th><th class="num">H</th><th class="num">B</th><th class="num">BT</th><th class="num">BB</th><th class="num">HS</th><th class="num">Thẻ</th><th class="num">Điểm</th></tr></thead>
+      <tbody>
+        ${standings.map((r,i)=>`<tr class="${i<2?'top2':''}">
+          <td><span class="rank">${i+1}</span></td>
+          <td>${r.name}</td>
+          <td class="num">${r.mp}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td>
+          <td class="num">${r.gf}</td><td class="num">${r.ga}</td><td class="num">${r.gd>0?'+':''}${r.gd}</td>
+          <td class="num">${r.yellow}V ${r.red}Đ</td>
+          <td class="num" style="font-weight:700;">${r.pts}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="empty-note" style="padding-top:10px;">Hạng 1–2 (tô vàng) vào vòng tứ kết. Theo Điều lệ, khi bằng điểm xét lần lượt: hiệu số → tổng bàn thắng → ít thẻ phạt hơn. Nếu vẫn bằng nhau ở cả 3 chỉ số, BTC tổ chức đá luân lưu 1 quả quyết định (tool chưa hỗ trợ bước này, cần xử lý thủ công tại sân).</div>
+  `;
+}
+
+/* ============================== RENDER: KNOCKOUT ============================== */
+function bmatchHtml(matchId){
+  const m = MATCH_BY_ID[matchId];
+  const {t1,t2} = getMatchTeams(matchId);
+  const md = state.matches[matchId];
+  const done = hasResult(matchId);
+  const ready = !!(t1 && t2);
+  const out = done ? getMatchOutcome(matchId) : null;
+  const n1 = t1?teamName(t1):'—';
+  const n2 = t2?teamName(t2):'—';
+  const s1 = done ? getMatch(matchId).score1 : '';
+  const s2 = done ? getMatch(matchId).score2 : '';
+  const w1 = out && out.winner===t1;
+  const w2 = out && out.winner===t2;
+  return `<div class="bmatch ${ready?'':'pending'}">
+    <div class="col-label" style="text-align:left;padding:5px 10px 0;font-size:11px;">${m.label} · ${m.time}</div>
+    <div class="brow ${w1?'winner':''}"><span class="bname">${n1}</span><span class="bscore">${s1}</span></div>
+    <div class="brow ${w2?'winner':''}"><span class="bname">${n2}</span><span class="bscore">${s2}</span></div>
+    ${ready ? `<button class="edit-link" data-match="${matchId}">${done?'Sửa kết quả':'Nhập kết quả'}</button>` : `<div class="edit-link" style="cursor:default;color:var(--ink-soft);">Chờ xác định đội</div>`}
+  </div>`;
+}
+function renderKnockout(){
+  document.getElementById('bracketWrap').innerHTML = `
+    <div class="bracket-col">
+      <div class="col-label">TỨ KẾT</div>
+      ${bmatchHtml('TK1')}${bmatchHtml('TK2')}${bmatchHtml('TK3')}${bmatchHtml('TK4')}
+    </div>
+    <div class="bracket-col">
+      <div class="col-label">BÁN KẾT</div>
+      ${bmatchHtml('BK1')}${bmatchHtml('BK2')}
+    </div>
+    <div class="bracket-col">
+      <div class="col-label">CHUNG KẾT</div>
+      ${bmatchHtml('CK')}
+    </div>
+  `;
+  document.getElementById('thirdPlaceWrap').innerHTML = bmatchHtml('HANG3');
+}
+
+/* ============================== RENDER: STATS ============================== */
+function renderStats(){
+  const scorers = computeTopScorers().slice(0,15);
+  document.getElementById('topScorers').innerHTML = scorers.length ? scorers.map((s,i)=>`
+    <li><div class="medal">${i+1}</div><div class="name">${s.player}<div class="sub">${teamName(s.team)}</div></div><div class="amount">${s.goals}</div></li>
+  `).join('') : '<div class="empty-note">Chưa có dữ liệu bàn thắng.</div>';
+
+  const fp = computeFairPlay().slice(0,15);
+  document.getElementById('fairPlay').innerHTML = fp.length ? fp.map((s,i)=>`
+    <li><div class="medal">${i+1}</div><div class="name">${s.name}<div class="sub">${s.mp} trận · ${s.yellow} thẻ vàng · ${s.red} thẻ đỏ</div></div><div class="amount">${s.fp}đ phạt</div></li>
+  `).join('') : '<div class="empty-note">Chưa có đội nào thi đấu.</div>';
+
+  const totals = computeAllTeamStats().sort((a,b)=> b.mp-a.mp || b.gf-a.gf);
+  document.getElementById('teamTotals').innerHTML = `
+    <table>
+      <thead><tr><th>Đội</th><th class="num">Trận</th><th class="num">T</th><th class="num">H</th><th class="num">B</th><th class="num">BT</th><th class="num">BB</th><th class="num">HS</th><th class="num">Vàng</th><th class="num">Đỏ</th></tr></thead>
+      <tbody>${totals.map(r=>`<tr><td>${r.name}</td><td class="num">${r.mp}</td><td class="num">${r.w}</td><td class="num">${r.d}</td><td class="num">${r.l}</td><td class="num">${r.gf}</td><td class="num">${r.ga}</td><td class="num">${r.gd>0?'+':''}${r.gd}</td><td class="num">${r.yellow}</td><td class="num">${r.red}</td></tr>`).join('')}</tbody>
+    </table>
+  `;
+}
+
+/* ============================== RENDER: TEAMS ============================== */
+function renderTeams(){
+  document.getElementById('teamsWrap').innerHTML = BANGS.map(b=>`
+    <h3 style="margin-top:22px;">Bảng ${b}</h3>
+    <div class="team-grid">
+      ${[1,2,3,4,5,6].map(i=>{
+        const id=b+i; const t = state.teams[id];
+        return `<div class="team-card">
+          <div class="bang-label">${id}</div>
+          <input type="text" data-team="${id}" data-field="name" value="${t.name.replace(/"/g,'&quot;')}">
+          <textarea data-team="${id}" data-field="players" placeholder="7 - Nguyễn Văn A&#10;10 - Trần Thị B&#10;...">${(t.players||[]).join('\n')}</textarea>
+          <div class="cnt">${(t.players||[]).length} / 12 cầu thủ${(t.players||[]).length>12?' — vượt quá quy định!':''}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+}
+
+/* ============================== MODAL: MATCH ENTRY ============================== */
+let modalMatchId = null;
+let modalDraft = null;
+
+function openMatchModal(matchId){
+  modalMatchId = matchId;
+  const m = MATCH_BY_ID[matchId];
+  const {t1,t2} = getMatchTeams(matchId);
+  if(!t1 || !t2){ return; }
+  const existing = state.matches[matchId];
+  modalDraft = existing ? JSON.parse(JSON.stringify(existing)) : {score1:null,score2:null,goals:[],cards:[],penaltyWinner:null};
+  if(!modalDraft.goals) modalDraft.goals=[];
+  if(!modalDraft.cards) modalDraft.cards=[];
+
+  document.getElementById('modalTitle').textContent = (m.round==='group'?('Bảng '+m.bang+' · '):'') + (m.label||'') + ' — ' + m.date;
+  renderModalBody();
+  document.getElementById('modalOverlay').classList.add('open');
+  isModalOpen = true;
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  modalMatchId = null; modalDraft = null;
+  isModalOpen = false;
+}
+function playerOptions(teamId, selected){
+  const t = state.teams[teamId];
+  const opts = (t.players||[]).map(p=>`<option value="${p.replace(/"/g,'&quot;')}" ${p===selected?'selected':''}>${p}</option>`).join('');
+  return `<option value="">— chọn cầu thủ —</option>${opts}<option value="__other__" ${selected==='__other__'?'selected':''}>Khác (nhập tên)...</option>`;
+}
+function renderModalBody(){
+  const matchId = modalMatchId;
+  const m = MATCH_BY_ID[matchId];
+  const {t1,t2} = getMatchTeams(matchId);
+  const n1 = teamName(t1), n2 = teamName(t2);
+  const isKO = m.round!=='group';
+
+  let html = `<div class="score-input-row">
+    <div class="tname">${n1}</div>
+    <input type="number" min="0" id="scoreInput1" value="${modalDraft.score1??''}">
+    <div class="dash">–</div>
+    <input type="number" min="0" id="scoreInput2" value="${modalDraft.score2??''}">
+    <div class="tname">${n2}</div>
+  </div>`;
+  html += `<div style="display:flex;gap:8px;justify-content:center;margin:-10px 0 18px;">
+    <button class="btn-danger-outline" id="forfeit1" type="button">${n1} bỏ cuộc (thua 0-3)</button>
+    <button class="btn-danger-outline" id="forfeit2" type="button">${n2} bỏ cuộc (thua 0-3)</button>
+  </div>`;
+
+  html += `<div class="subhead">Bàn thắng <button class="add-btn" id="addGoal">+ Thêm bàn</button></div>`;
+  html += `<div id="goalsWrap">` + modalDraft.goals.map((g,idx)=>goalRowHtml(g,idx,t1,t2,n1,n2)).join('') + `</div>`;
+  if(modalDraft.goals.length===0) html += `<div class="empty-note" id="goalsEmptyNote">Chưa có bàn thắng nào được ghi.</div>`;
+
+  html += `<div class="subhead">Thẻ phạt <button class="add-btn" id="addCard">+ Thêm thẻ</button></div>`;
+  html += `<div id="cardsWrap">` + modalDraft.cards.map((c,idx)=>cardRowHtml(c,idx,t1,t2,n1,n2)).join('') + `</div>`;
+  if(modalDraft.cards.length===0) html += `<div class="empty-note" id="cardsEmptyNote">Chưa có thẻ phạt nào.</div>`;
+  html += cardWarningHtml();
+
+  if(isKO){
+    html += `<div class="penalty-box" id="penaltyBox" style="display:none;">
+      <strong>Hai đội hòa nhau — chọn đội thắng luân lưu:</strong>
+      <label><input type="radio" name="pen" value="${t1}" ${modalDraft.penaltyWinner===t1?'checked':''}> ${n1} thắng luân lưu</label>
+      <label><input type="radio" name="pen" value="${t2}" ${modalDraft.penaltyWinner===t2?'checked':''}> ${n2} thắng luân lưu</label>
+    </div>`;
+  }
+
+  document.getElementById('modalBody').innerHTML = html;
+  togglePenaltyBox();
+}
+function goalRowHtml(g, idx, t1, t2, n1, n2){
+  const showOther = g.player==='__other__' || (g.player && !(state.teams[g.team].players||[]).includes(g.player));
+  return `<div class="entry-row" data-kind="goal" data-idx="${idx}">
+    <select class="g-team">
+      <option value="${t1}" ${g.team===t1?'selected':''}>${n1}</option>
+      <option value="${t2}" ${g.team===t2?'selected':''}>${n2}</option>
+    </select>
+    <select class="g-player">${playerOptions(g.team, showOther? '__other__' : g.player)}</select>
+    <input type="text" class="g-other" placeholder="Tên cầu thủ" style="${showOther?'':'display:none;'}" value="${showOther && g.player!=='__other__' ? g.player.replace(/"/g,'&quot;'):''}">
+    <button class="rm" data-kind="goal" data-idx="${idx}">&times;</button>
+  </div>`;
+}
+function cardRowHtml(c, idx, t1, t2, n1, n2){
+  const showOther = c.player==='__other__' || (c.player && !(state.teams[c.team].players||[]).includes(c.player));
+  return `<div class="entry-row" data-kind="card" data-idx="${idx}" style="grid-template-columns:90px 1fr 70px 90px 26px;">
+    <select class="c-team">
+      <option value="${t1}" ${c.team===t1?'selected':''}>${n1}</option>
+      <option value="${t2}" ${c.team===t2?'selected':''}>${n2}</option>
+    </select>
+    <select class="c-player">${playerOptions(c.team, showOther? '__other__' : c.player)}</select>
+    <input type="text" class="c-other" placeholder="Tên cầu thủ" style="${showOther?'':'display:none;'}" value="${showOther && c.player!=='__other__' ? c.player.replace(/"/g,'&quot;'):''}">
+    <select class="c-type">
+      <option value="yellow" ${c.type==='yellow'?'selected':''}>Thẻ vàng</option>
+      <option value="red" ${c.type==='red'?'selected':''}>Thẻ đỏ</option>
+    </select>
+    <button class="rm" data-kind="card" data-idx="${idx}">&times;</button>
+  </div>`;
+}
+function cardWarningHtml(){
+  const counts = {};
+  (modalDraft.cards||[]).forEach(c=>{
+    if(!c.player) return;
+    const key = c.team+'|'+c.player;
+    counts[key] = counts[key] || {yellow:0, player:c.player};
+    if(c.type==='yellow') counts[key].yellow++;
+  });
+  const flagged = Object.values(counts).filter(x=>x.yellow>=2);
+  if(!flagged.length) return '';
+  return `<div class="penalty-box" style="background:#F6D9D6;margin-top:10px;">
+    ⚠ Theo Điều lệ, 2 thẻ vàng trong cùng 1 trận = thẻ đỏ gián tiếp — cầu thủ phải rời sân, đội chơi thiếu người 5 phút:<br>
+    ${flagged.map(f=>'• '+f.player).join('<br>')}
+  </div>`;
+}
+function togglePenaltyBox(){
+  const box = document.getElementById('penaltyBox');
+  if(!box) return;
+  const s1 = document.getElementById('scoreInput1').value;
+  const s2 = document.getElementById('scoreInput2').value;
+  box.style.display = (s1!=='' && s2!=='' && Number(s1)===Number(s2)) ? 'block' : 'none';
+}
+
+function syncDraftFromDOM(){
+  const {t1,t2} = getMatchTeams(modalMatchId);
+  modalDraft.score1 = document.getElementById('scoreInput1').value;
+  modalDraft.score2 = document.getElementById('scoreInput2').value;
+  document.querySelectorAll('#goalsWrap [data-kind="goal"]').forEach((row,idx)=>{
+    const team = row.querySelector('.g-team').value;
+    const psel = row.querySelector('.g-player').value;
+    const other = row.querySelector('.g-other').value.trim();
+    modalDraft.goals[idx] = { team, player: psel==='__other__' ? other : psel };
+  });
+  document.querySelectorAll('#cardsWrap [data-kind="card"]').forEach((row,idx)=>{
+    const team = row.querySelector('.c-team').value;
+    const psel = row.querySelector('.c-player').value;
+    const other = row.querySelector('.c-other').value.trim();
+    const type = row.querySelector('.c-type').value;
+    modalDraft.cards[idx] = { team, player: psel==='__other__' ? other : psel, type };
+  });
+  const pen = document.querySelector('input[name="pen"]:checked');
+  modalDraft.penaltyWinner = pen ? pen.value : null;
+}
+
+document.getElementById('modalBody').addEventListener('click', (e)=>{
+  if(e.target.id==='addGoal'){
+    syncDraftFromDOM();
+    const {t1} = getMatchTeams(modalMatchId);
+    modalDraft.goals.push({team:t1, player:''});
+    renderModalBody();
+  }
+  if(e.target.id==='addCard'){
+    syncDraftFromDOM();
+    const {t1} = getMatchTeams(modalMatchId);
+    modalDraft.cards.push({team:t1, player:'', type:'yellow'});
+    renderModalBody();
+  }
+  if(e.target.classList.contains('rm')){
+    syncDraftFromDOM();
+    const kind = e.target.dataset.kind, idx = Number(e.target.dataset.idx);
+    if(kind==='goal') modalDraft.goals.splice(idx,1); else modalDraft.cards.splice(idx,1);
+    renderModalBody();
+  }
+  if(e.target.id==='forfeit1' || e.target.id==='forfeit2'){
+    syncDraftFromDOM();
+    if(e.target.id==='forfeit1'){ modalDraft.score1='0'; modalDraft.score2='3'; }
+    else { modalDraft.score1='3'; modalDraft.score2='0'; }
+    renderModalBody();
+  }
+});
+document.getElementById('modalBody').addEventListener('change', (e)=>{
+  if(e.target.classList.contains('g-player') || e.target.classList.contains('c-team')){
+    syncDraftFromDOM(); renderModalBody(); return;
+  }
+  if(e.target.classList.contains('c-player') || e.target.classList.contains('c-type')){
+    syncDraftFromDOM(); renderModalBody(); return;
+  }
+  if(e.target.id==='scoreInput1' || e.target.id==='scoreInput2'){
+    togglePenaltyBox();
+  }
+});
+document.getElementById('modalBody').addEventListener('input', (e)=>{
+  if(e.target.id==='scoreInput1' || e.target.id==='scoreInput2'){ togglePenaltyBox(); }
+});
+
+document.getElementById('modalSave').addEventListener('click', async ()=>{
+  syncDraftFromDOM();
+  if(modalDraft.score1===''||modalDraft.score2===''||modalDraft.score1===null||modalDraft.score2===null){
+    alert('Vui lòng nhập tỉ số cho cả hai đội.'); return;
+  }
+  const isKO = matchIsKnockout(modalMatchId);
+  if(isKO && Number(modalDraft.score1)===Number(modalDraft.score2) && !modalDraft.penaltyWinner){
+    alert('Trận đấu loại trực tiếp không được hòa — vui lòng chọn đội thắng luân lưu.'); return;
+  }
+  modalDraft.goals = modalDraft.goals.filter(g=>g.player);
+  modalDraft.cards = modalDraft.cards.filter(c=>c.player);
+  const savedMatchId = modalMatchId, savedDraft = modalDraft;
+  const saveBtn = document.getElementById('modalSave');
+  saveBtn.disabled = true; saveBtn.textContent = 'Đang lưu...';
+  closeModal();
+  await commitChange(s=>{ s.matches[savedMatchId] = savedDraft; });
+  saveBtn.disabled = false; saveBtn.textContent = 'Lưu kết quả';
+  showToast('Đã lưu kết quả trận đấu ✓');
+});
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalCancel').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='modalOverlay') closeModal(); });
+
+/* ============================== COMMS (TRUYỀN THÔNG) ============================== */
+const COMMS_STATUS = [
+  {id:'draft', label:'Đang soạn nội dung', cls:'s-draft'},
+  {id:'review', label:'Chờ duyệt', cls:'s-review'},
+  {id:'scheduled', label:'Đã lên lịch đăng', cls:'s-scheduled'},
+  {id:'done', label:'Đã truyền thông xong', cls:'s-done'},
+  {id:'fix', label:'Cần điều chỉnh lại', cls:'s-fix'},
+];
+function commsStatusMeta(id){ return COMMS_STATUS.find(s=>s.id===id) || COMMS_STATUS[0]; }
+function fmtTime(ts){
+  const d = new Date(ts);
+  const p = n=>String(n).padStart(2,'0');
+  return p(d.getDate())+'/'+p(d.getMonth()+1)+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+
+function renderComms(){
+  const list = document.getElementById('commsList');
+  if(!state.comms.length){
+    list.innerHTML = '<div class="empty-note">Chưa có nội dung truyền thông nào. Bấm "+ Thêm nội dung truyền thông" để bắt đầu.</div>';
+    return;
+  }
+  const sorted = [...state.comms].sort((a,b)=> (b.updatedAt||0) - (a.updatedAt||0));
+  list.innerHTML = sorted.map(item=>{
+    const st = commsStatusMeta(item.status);
+    return `<div class="comms-card" data-id="${item.id}">
+      <div class="row1">
+        <div>
+          <div class="title">${escapeHtml(item.title||'(Chưa có tiêu đề)')}</div>
+          <div class="meta">${item.channel? 'Kênh: '+escapeHtml(item.channel)+' · ':''}${item.owner? 'Phụ trách: '+escapeHtml(item.owner)+' · ':''}${item.plannedDate? 'Dự kiến: '+escapeHtml(item.plannedDate):''}</div>
+        </div>
+        <span class="status-badge ${st.cls}">${st.label}</span>
+      </div>
+      ${item.content ? `<div class="excerpt">${escapeHtml(item.content)}</div>` : ''}
+      ${item.statusNote ? `<div class="excerpt" style="color:var(--ink-soft);font-style:italic;">Ghi chú: ${escapeHtml(item.statusNote)}</div>` : ''}
+      <div class="foot-row">
+        <span>${(item.comments||[]).length} feedback</span>
+        <span>Cập nhật ${item.updatedAt? fmtTime(item.updatedAt) : ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+let commsEditingId = null;
+let commsDraft = null;
+function openCommsModal(id){
+  commsEditingId = id || null;
+  const existing = id ? state.comms.find(c=>c.id===id) : null;
+  commsDraft = existing ? JSON.parse(JSON.stringify(existing)) : {
+    id: 'c'+Date.now(), title:'', content:'', channel:'', owner:'', plannedDate:'', status:'draft', statusNote:'', comments:[], updatedAt: Date.now()
+  };
+  document.getElementById('commsModalTitle').textContent = existing ? 'Sửa nội dung truyền thông' : 'Thêm nội dung truyền thông';
+  document.getElementById('commsDeleteBtn').style.display = existing ? 'inline-block' : 'none';
+  renderCommsModalBody();
+  document.getElementById('commsModalOverlay').classList.add('open');
+  isModalOpen = true;
+}
+function closeCommsModal(){
+  document.getElementById('commsModalOverlay').classList.remove('open');
+  commsEditingId = null; commsDraft = null;
+  isModalOpen = false;
+}
+function renderCommsModalBody(){
+  const d = commsDraft;
+  let html = `
+    <div class="comms-field">
+      <label>Tiêu đề</label>
+      <input type="text" id="cm-title" value="${d.title.replace(/"/g,'&quot;')}" placeholder="VD: Thông báo lịch thi đấu vòng bảng">
+    </div>
+    <div class="comms-field">
+      <label>Nội dung đã thống nhất</label>
+      <textarea id="cm-content" placeholder="Nội dung chính thức đã chốt để truyền thông...">${d.content}</textarea>
+    </div>
+    <div class="comms-two">
+      <div class="comms-field">
+        <label>Kênh truyền thông</label>
+        <input type="text" id="cm-channel" value="${(d.channel||'').replace(/"/g,'&quot;')}" placeholder="Zalo / Email / Banner sân...">
+      </div>
+      <div class="comms-field">
+        <label>Người phụ trách</label>
+        <input type="text" id="cm-owner" value="${(d.owner||'').replace(/"/g,'&quot;')}" placeholder="Tên phụ trách">
+      </div>
+    </div>
+    <div class="comms-two">
+      <div class="comms-field">
+        <label>Ngày dự kiến / đã đăng</label>
+        <input type="text" id="cm-date" value="${(d.plannedDate||'').replace(/"/g,'&quot;')}" placeholder="VD: 15/9/2026">
+      </div>
+      <div class="comms-field">
+        <label>Trạng thái</label>
+        <select id="cm-status">${COMMS_STATUS.map(s=>`<option value="${s.id}" ${d.status===s.id?'selected':''}>${s.label}</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="comms-field">
+      <label>Ghi chú trạng thái</label>
+      <textarea id="cm-note" placeholder="VD: đã gửi trưởng bộ phận duyệt, chờ phản hồi...">${d.statusNote||''}</textarea>
+    </div>
+    <div class="comment-thread">
+      <label style="display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;font-weight:600;">Feedback / Góp ý (${(d.comments||[]).length})</label>
+      <div id="commentList">${(d.comments||[]).map(c=>`
+        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author||'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
+      `).join('') || '<div class="empty-note">Chưa có góp ý nào.</div>'}</div>
+      <div class="comment-add">
+        <input type="text" id="cm-comment-author" placeholder="Tên bạn" style="max-width:120px;">
+        <input type="text" id="cm-comment-text" placeholder="Nhập góp ý / feedback...">
+        <button id="cm-add-comment" type="button">Gửi</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('commsModalBody').innerHTML = html;
+}
+function syncCommsDraftFromDOM(){
+  commsDraft.title = document.getElementById('cm-title').value.trim();
+  commsDraft.content = document.getElementById('cm-content').value.trim();
+  commsDraft.channel = document.getElementById('cm-channel').value.trim();
+  commsDraft.owner = document.getElementById('cm-owner').value.trim();
+  commsDraft.plannedDate = document.getElementById('cm-date').value.trim();
+  commsDraft.status = document.getElementById('cm-status').value;
+  commsDraft.statusNote = document.getElementById('cm-note').value.trim();
+}
+document.getElementById('commsModalBody').addEventListener('click', (e)=>{
+  if(e.target.id==='cm-add-comment'){
+    const authorEl = document.getElementById('cm-comment-author');
+    const textEl = document.getElementById('cm-comment-text');
+    const text = textEl.value.trim();
+    if(!text) return;
+    syncCommsDraftFromDOM();
+    commsDraft.comments = commsDraft.comments || [];
+    commsDraft.comments.push({author: authorEl.value.trim() || 'Ẩn danh', text, time: Date.now()});
+    renderCommsModalBody();
+  }
+});
+document.getElementById('commsModalBody').addEventListener('keydown', (e)=>{
+  if(e.target.id==='cm-comment-text' && e.key==='Enter'){
+    e.preventDefault();
+    document.getElementById('cm-add-comment').click();
+  }
+});
+document.getElementById('addCommsBtn').addEventListener('click', ()=> openCommsModal(null));
+document.getElementById('commsList').addEventListener('click', (e)=>{
+  const card = e.target.closest('.comms-card');
+  if(card) openCommsModal(card.dataset.id);
+});
+document.getElementById('commsModalClose').addEventListener('click', closeCommsModal);
+document.getElementById('commsCancel').addEventListener('click', closeCommsModal);
+document.getElementById('commsModalOverlay').addEventListener('click', (e)=>{ if(e.target.id==='commsModalOverlay') closeCommsModal(); });
+document.getElementById('commsSave').addEventListener('click', async ()=>{
+  syncCommsDraftFromDOM();
+  if(!commsDraft.title){ alert('Vui lòng nhập tiêu đề nội dung truyền thông.'); return; }
+  commsDraft.updatedAt = Date.now();
+  const draftToSave = commsDraft;
+  closeCommsModal();
+  await commitChange(s=>{
+    const idx = s.comms.findIndex(c=>c.id===draftToSave.id);
+    if(idx>=0) s.comms[idx] = draftToSave; else s.comms.push(draftToSave);
+  });
+  showToast('Đã lưu nội dung truyền thông ✓');
+});
+document.getElementById('commsDeleteBtn').addEventListener('click', async ()=>{
+  if(!commsEditingId) return;
+  if(!confirm('Xóa nội dung truyền thông này?')) return;
+  const idToDelete = commsEditingId;
+  closeCommsModal();
+  await commitChange(s=>{ s.comms = s.comms.filter(c=>c.id!==idToDelete); });
+  showToast('Đã xóa nội dung truyền thông');
+});
+
+/* ============================== EVENT WIRING ============================== */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+btn.dataset.view).classList.add('active');
+  });
+});
+document.getElementById('groupTabs').addEventListener('click', (e)=>{
+  if(e.target.dataset.bang){ currentBang = e.target.dataset.bang; renderGroupView(); }
+});
+document.getElementById('view-groups').addEventListener('click', (e)=>{
+  if(e.target.dataset.match) openMatchModal(e.target.dataset.match);
+});
+document.getElementById('view-knockout').addEventListener('click', (e)=>{
+  if(e.target.dataset.match) openMatchModal(e.target.dataset.match);
+});
+document.getElementById('teamsWrap').addEventListener('change', async (e)=>{
+  const id = e.target.dataset.team, field = e.target.dataset.field;
+  if(!id) return;
+  const val = e.target.value;
+  await commitChange(s=>{
+    if(field==='name'){ s.teams[id].name = val.trim() || defaultTeamName(id); }
+    if(field==='players'){ s.teams[id].players = val.split('\n').map(x=>x.trim()).filter(Boolean); }
+  });
+});
+
+document.getElementById('importExcelBtn').addEventListener('click', ()=> document.getElementById('importExcelFile').click());
+document.getElementById('importExcelFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev)=>{
+    try{
+      if(typeof XLSX === 'undefined'){ alert('Không tải được thư viện đọc Excel. Vui lòng kiểm tra kết nối mạng và thử lại.'); return; }
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheetName = wb.SheetNames.includes('Cầu thủ') ? 'Cầu thủ' : wb.SheetNames[wb.SheetNames.length>1?1:0];
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1, defval:''});
+      const validCode = /^[A-D][1-6]$/;
+      const parsed = {}; // code -> {name, players:[]}
+      const skipped = [];
+      rows.forEach((row, idx)=>{
+        if(idx===0) return; // header row
+        const rawCode = String(row[0]||'').trim().toUpperCase();
+        if(!rawCode) return; // blank/note rows
+        if(!validCode.test(rawCode)){ skipped.push('Dòng '+(idx+1)+': mã đội "'+rawCode+'" không hợp lệ'); return; }
+        const tenDoi = String(row[1]||'').trim();
+        const soAo = row[2]!==undefined && row[2]!=='' ? String(row[2]).trim() : '';
+        const tenCauThu = String(row[3]||'').trim();
+        if(!parsed[rawCode]) parsed[rawCode] = {name:'', players:[]};
+        if(tenDoi) parsed[rawCode].name = tenDoi;
+        if(tenCauThu) parsed[rawCode].players.push(soAo ? (soAo+' - '+tenCauThu) : tenCauThu);
+      });
+      const codes = Object.keys(parsed);
+      if(!codes.length){ alert('Không tìm thấy dữ liệu hợp lệ trong file. Kiểm tra lại định dạng theo file mẫu.'); return; }
+      const totalPlayers = codes.reduce((sum,c)=>sum+parsed[c].players.length,0);
+      let msg = 'Sẽ cập nhật '+codes.length+' đội, tổng '+totalPlayers+' cầu thủ (ghi đè tên/danh sách cầu thủ hiện có của các đội này cho MỌI NGƯỜI đang dùng chung). Tiếp tục?';
+      if(skipped.length) msg += '\n\n'+skipped.length+' dòng bị bỏ qua do mã đội không hợp lệ:\n'+skipped.slice(0,8).join('\n')+(skipped.length>8?'\n...':'');
+      if(!confirm(msg)) return;
+      await commitChange(s=>{
+        codes.forEach(code=>{
+          if(!s.teams[code]) return;
+          if(parsed[code].name) s.teams[code].name = parsed[code].name;
+          if(parsed[code].players.length) s.teams[code].players = parsed[code].players;
+        });
+      });
+      showToast('Đã nhập '+codes.length+' đội từ Excel ✓');
+    }catch(err){
+      alert('Không đọc được file này. Kiểm tra file có đúng định dạng .xlsx theo file mẫu không.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'giai-noi-bo-du-lieu.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importBtnTrigger').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (ev)=>{
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if(!parsed.teams || !parsed.matches) throw new Error('invalid');
+      if(!confirm('Nhập file này sẽ GHI ĐÈ toàn bộ dữ liệu đang dùng chung cho mọi người. Tiếp tục?')) return;
+      mergeIntoState(parsed);
+      await persistState();
+      renderAll();
+      alert('Đã nhập dữ liệu thành công.');
+    }catch(err){ alert('File không hợp lệ.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ============================== INIT ============================== */
+function renderAll(){
+  renderHome();
+  renderGroupView();
+  renderKnockout();
+  renderStats();
+  renderTeams();
+  renderComms();
+}
+async function initApp(){
+  updateSyncIndicator();
+  const remote = await fetchRemoteState();
+  if(remote) mergeIntoState(remote);
+  else await persistState(); // first user ever to open this — seed the shared store
+  lastSyncTime = Date.now();
+  renderAll();
+  updateSyncIndicator();
+  setInterval(pollRefresh, 8000);
+}
+initApp();
+</script>
+</body>
+</html>
