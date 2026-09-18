@@ -194,7 +194,7 @@
   .bmatch .brow.winner{background:var(--gold-soft);font-weight:700;}
   .bmatch .bname{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .bmatch .bscore{font-family:'Oswald',sans-serif;}
-  .bmatch .edit-link{display:block;text-align:center;font-size:11.5px;padding:5px;color:var(--pitch);background:var(--paper);border-top:1px dashed var(--paper-line);width:100%;border:none;}
+  .bmatch .edit-link{display:block;text-align:center;font-size:11.5px;padding:5px;color:var(--pitch);background:var(--paper);border-top:1px dashed var(--paper-line);}
   .bmatch .edit-link:hover{background:var(--gold-soft);}
   .bmatch.pending{opacity:0.55;}
 
@@ -228,6 +228,10 @@
   .rank-list .sub{color:var(--ink-soft);font-size:12.5px;}
   .rank-list .amount{font-family:'Oswald',sans-serif;font-size:18px;color:var(--pitch-dark);}
 
+  .card-badge{display:inline-flex;align-items:center;gap:3px;font-size:12px;padding:1px 6px;border-radius:var(--radius-sm);}
+  .card-badge.y{background:#FCF0CC;color:#8A6A0A;}
+  .card-badge.r{background:#F6D9D6;color:#8A231C;}
+
   .empty-note{color:var(--ink-soft);font-style:italic;padding:14px 4px;font-size:13.5px;}
 
   /* Modal */
@@ -255,7 +259,7 @@
   .subhead .add-btn{background:var(--paper);border:1px solid var(--paper-line);font-size:12px;padding:4px 10px;border-radius:var(--radius-sm);}
   .entry-row{display:grid;grid-template-columns:90px 1fr 90px 26px;gap:6px;margin-bottom:6px;}
   .entry-row select, .entry-row input{font-size:13px;padding:5px 6px;border:1px solid var(--paper-line);border-radius:var(--radius-sm);font-family:inherit;}
-  .entry-row .rm{background:none;border:none;color:var(--red-card);font-size:18px;font-weight:bold;cursor:pointer;}
+  .entry-row .rm{background:none;border:none;color:var(--red-card);font-size:16px;}
   .penalty-box{background:var(--gold-soft);padding:10px 12px;margin-top:10px;font-size:13.5px;}
   .penalty-box label{display:flex;align-items:center;gap:6px;margin-top:6px;cursor:pointer;}
 
@@ -1274,7 +1278,6 @@ function closeModal(){
 }
 function playerOptions(teamId, selected){
   const t = state.teams[teamId];
-  if(!t) return '<option value="">— chọn cầu thủ —</option>';
   const opts = (t.players||[]).map(p=>`<option value="${p.replace(/"/g,'&quot;')}" ${p===selected?'selected':''}>${p}</option>`).join('');
   return `<option value="">— chọn cầu thủ —</option>${opts}<option value="__other__" ${selected==='__other__'?'selected':''}>Khác (nhập tên)...</option>`;
 }
@@ -1297,11 +1300,11 @@ function renderModalBody(){
     <button class="btn-danger-outline" id="forfeit2" type="button">${n2} bỏ cuộc (thua 0-3)</button>
   </div>`;
 
-  html += `<div class="subhead">Bàn thắng <button class="add-btn" id="addGoal" type="button">+ Thêm bàn</button></div>`;
+  html += `<div class="subhead">Bàn thắng <button class="add-btn" id="addGoal">+ Thêm bàn</button></div>`;
   html += `<div id="goalsWrap">` + modalDraft.goals.map((g,idx)=>goalRowHtml(g,idx,t1,t2,n1,n2)).join('') + `</div>`;
   if(modalDraft.goals.length===0) html += `<div class="empty-note" id="goalsEmptyNote">Chưa có bàn thắng nào được ghi.</div>`;
 
-  html += `<div class="subhead">Thẻ phạt <button class="add-btn" id="addCard" type="button">+ Thêm thẻ</button></div>`;
+  html += `<div class="subhead">Thẻ phạt <button class="add-btn" id="addCard">+ Thêm thẻ</button></div>`;
   html += `<div id="cardsWrap">` + modalDraft.cards.map((c,idx)=>cardRowHtml(c,idx,t1,t2,n1,n2)).join('') + `</div>`;
   if(modalDraft.cards.length===0) html += `<div class="empty-note" id="cardsEmptyNote">Chưa có thẻ phạt nào.</div>`;
   html += cardWarningHtml();
@@ -1317,39 +1320,34 @@ function renderModalBody(){
   document.getElementById('modalBody').innerHTML = html;
   togglePenaltyBox();
 }
-
 function goalRowHtml(g, idx, t1, t2, n1, n2){
-  const teamVal = g.team || t1;
-  const showOther = g.player==='__other__' || (g.player && !(state.teams[teamVal]?.players||[]).includes(g.player));
+  const showOther = g.player==='__other__' || (g.player && !(state.teams[g.team].players||[]).includes(g.player));
   return `<div class="entry-row" data-kind="goal" data-idx="${idx}">
     <select class="g-team">
-      <option value="${t1}" ${teamVal===t1?'selected':''}>${n1}</option>
-      <option value="${t2}" ${teamVal===t2?'selected':''}>${n2}</option>
+      <option value="${t1}" ${g.team===t1?'selected':''}>${n1}</option>
+      <option value="${t2}" ${g.team===t2?'selected':''}>${n2}</option>
     </select>
-    <select class="g-player">${playerOptions(teamVal, showOther? '__other__' : g.player)}</select>
-    <input type="text" class="g-other" placeholder="Tên cầu thủ" style="${showOther?'':'display:none;'}" value="${showOther && g.player!=='__other__' ? (g.player||'').replace(/"/g,'&quot;'):''}">
-    <button class="rm" type="button" data-kind="goal" data-idx="${idx}">&times;</button>
+    <select class="g-player">${playerOptions(g.team, showOther? '__other__' : g.player)}</select>
+    <input type="text" class="g-other" placeholder="Tên cầu thủ" style="${showOther?'':'display:none;'}" value="${showOther && g.player!=='__other__' ? g.player.replace(/"/g,'&quot;'):''}">
+    <button class="rm" data-kind="goal" data-idx="${idx}">&times;</button>
   </div>`;
 }
-
 function cardRowHtml(c, idx, t1, t2, n1, n2){
-  const teamVal = c.team || t1;
-  const showOther = c.player==='__other__' || (c.player && !(state.teams[teamVal]?.players||[]).includes(c.player));
+  const showOther = c.player==='__other__' || (c.player && !(state.teams[c.team].players||[]).includes(c.player));
   return `<div class="entry-row" data-kind="card" data-idx="${idx}" style="grid-template-columns:90px 1fr 70px 90px 26px;">
     <select class="c-team">
-      <option value="${t1}" ${teamVal===t1?'selected':''}>${n1}</option>
-      <option value="${t2}" ${teamVal===t2?'selected':''}>${n2}</option>
+      <option value="${t1}" ${c.team===t1?'selected':''}>${n1}</option>
+      <option value="${t2}" ${c.team===t2?'selected':''}>${n2}</option>
     </select>
-    <select class="c-player">${playerOptions(teamVal, showOther? '__other__' : c.player)}</select>
-    <input type="text" class="c-other" placeholder="Tên cầu thủ" style="${showOther?'':'display:none;'}" value="${showOther && c.player!=='__other__' ? (c.player||'').replace(/"/g,'&quot;'):''}">
+    <select class="c-player">${playerOptions(c.team, showOther? '__other__' : c.player)}</select>
+    <input type="text" class="c-other" placeholder="Tên cầu thủ" style="${showOther?'':'display:none;'}" value="${showOther && c.player!=='__other__' ? c.player.replace(/"/g,'&quot;'):''}">
     <select class="c-type">
       <option value="yellow" ${c.type==='yellow'?'selected':''}>Thẻ vàng</option>
       <option value="red" ${c.type==='red'?'selected':''}>Thẻ đỏ</option>
     </select>
-    <button class="rm" type="button" data-kind="card" data-idx="${idx}">&times;</button>
+    <button class="rm" data-kind="card" data-idx="${idx}">&times;</button>
   </div>`;
 }
-
 function cardWarningHtml(){
   const counts = {};
   (modalDraft.cards||[]).forEach(c=>{
@@ -1374,74 +1372,57 @@ function togglePenaltyBox(){
 }
 
 function syncDraftFromDOM(){
-  if(!modalDraft) return;
-  modalDraft.score1 = document.getElementById('scoreInput1')?.value ?? null;
-  modalDraft.score2 = document.getElementById('scoreInput2')?.value ?? null;
-  
-  modalDraft.goals = [];
-  document.querySelectorAll('#goalsWrap [data-kind="goal"]').forEach((row)=>{
+  modalDraft.score1 = document.getElementById('scoreInput1').value;
+  modalDraft.score2 = document.getElementById('scoreInput2').value;
+  document.querySelectorAll('#goalsWrap [data-kind="goal"]').forEach((row,idx)=>{
     const team = row.querySelector('.g-team').value;
     const psel = row.querySelector('.g-player').value;
     const other = row.querySelector('.g-other').value.trim();
-    modalDraft.goals.push({ team, player: psel==='__other__' ? other : psel });
+    modalDraft.goals[idx] = { team, player: psel==='__other__' ? other : psel };
   });
-
-  modalDraft.cards = [];
-  document.querySelectorAll('#cardsWrap [data-kind="card"]').forEach((row)=>{
+  document.querySelectorAll('#cardsWrap [data-kind="card"]').forEach((row,idx)=>{
     const team = row.querySelector('.c-team').value;
     const psel = row.querySelector('.c-player').value;
     const other = row.querySelector('.c-other').value.trim();
     const type = row.querySelector('.c-type').value;
-    modalDraft.cards.push({ team, player: psel==='__other__' ? other : psel, type });
+    modalDraft.cards[idx] = { team, player: psel==='__other__' ? other : psel, type };
   });
   const pen = document.querySelector('input[name="pen"]:checked');
   modalDraft.penaltyWinner = pen ? pen.value : null;
 }
 
 document.getElementById('modalBody').addEventListener('click', (e)=>{
-  const rmBtn = e.target.closest('.rm');
-  if(rmBtn){
-    syncDraftFromDOM();
-    const kind = rmBtn.dataset.kind;
-    const idx = Number(rmBtn.dataset.idx);
-    if(kind==='goal'){
-      modalDraft.goals.splice(idx,1);
-    } else if(kind==='card'){
-      modalDraft.cards.splice(idx,1);
-    }
-    renderModalBody();
-    return;
-  }
-
   if(e.target.id==='addGoal'){
     syncDraftFromDOM();
     const {t1} = getMatchTeams(modalMatchId);
     modalDraft.goals.push({team:t1, player:''});
     renderModalBody();
-    return;
   }
   if(e.target.id==='addCard'){
     syncDraftFromDOM();
     const {t1} = getMatchTeams(modalMatchId);
     modalDraft.cards.push({team:t1, player:'', type:'yellow'});
     renderModalBody();
-    return;
+  }
+  if(e.target.classList.contains('rm')){
+    syncDraftFromDOM();
+    const kind = e.target.dataset.kind, idx = Number(e.target.dataset.idx);
+    if(kind==='goal') modalDraft.goals.splice(idx,1); else modalDraft.cards.splice(idx,1);
+    renderModalBody();
   }
   if(e.target.id==='forfeit1' || e.target.id==='forfeit2'){
     syncDraftFromDOM();
     if(e.target.id==='forfeit1'){ modalDraft.score1='0'; modalDraft.score2='3'; }
     else { modalDraft.score1='3'; modalDraft.score2='0'; }
     renderModalBody();
-    return;
   }
 });
-
 document.getElementById('modalBody').addEventListener('change', (e)=>{
-  if(e.target.classList.contains('g-team') || e.target.classList.contains('g-player') ||
-     e.target.classList.contains('c-team') || e.target.classList.contains('c-player') || e.target.classList.contains('c-type')){
-    syncDraftFromDOM(); 
-    renderModalBody(); 
-    return;
+  if(e.target.classList.contains('g-player') || e.target.classList.contains('c-team')){
+    syncDraftFromDOM(); renderModalBody(); return;
+  }
+  if(e.target.classList.contains('c-player') || e.target.classList.contains('c-type')){
+    syncDraftFromDOM(); renderModalBody(); return;
   }
   if(e.target.id==='scoreInput1' || e.target.id==='scoreInput2'){
     togglePenaltyBox();
@@ -1574,7 +1555,7 @@ function renderCommsModalBody(){
     <div class="comment-thread">
       <label style="display:block;font-size:12.5px;color:var(--ink-soft);margin-bottom:8px;font-weight:600;">Feedback / Góp ý (${(d.comments||[]).length})</label>
       <div id="commentList">${(d.comments||[]).map(c=>`
-        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author \vert{}\vert{} 'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
+        <div class="comment-item"><span class="ctime">${fmtTime(c.time)}</span><span class="cauthor">${escapeHtml(c.author || 'Ẩn danh')}</span><div>${escapeHtml(c.text)}</div></div>
       `).join('') || '<div class="empty-note">Chưa có góp ý nào.</div>'}</div>
       <div class="comment-add">
         <input type="text" id="cm-comment-author" placeholder="Tên bạn" style="max-width:120px;">
